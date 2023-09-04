@@ -9,7 +9,14 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <map>
-#include <boost/regex.hpp>
+
+#ifdef IMGUI_EDITOR_NO_BOOST
+	#include <regex>
+	namespace boost = std;
+#else
+	#include <boost/regex.hpp>
+#endif
+
 #include "imgui.h"
 
 class IMGUI_API TextEditor
