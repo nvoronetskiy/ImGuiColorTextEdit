@@ -308,6 +308,9 @@ public:
 	inline void SetShowWhitespaces(bool aValue) { mShowWhitespaces = aValue; }
 	inline bool IsShowingWhitespaces() const { return mShowWhitespaces; }
 
+	inline void SetShowShortTabGlyphs(bool aValue) { mShowShortTabGlyphs = aValue; }
+	inline bool IsShowingShortTabGlyphs() const { return mShowShortTabGlyphs; }
+
 	inline ImVec4 U32ColorToVec4(ImU32 in) {
 		float s = 1.0f / 255.0f;
 		return ImVec4(
@@ -468,6 +471,7 @@ private:
 	int  mLeftMargin;
 	int mColorRangeMin, mColorRangeMax;
 	bool mShowWhitespaces;
+	bool mShowShortTabGlyphs;
 	float mLongestLineLength;
 
 	Palette mPaletteBase;

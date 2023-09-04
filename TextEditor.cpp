@@ -42,6 +42,7 @@ TextEditor::TextEditor()
 	, mColorRangeMax(0)
 	, mCheckComments(true)
 	, mShowWhitespaces(true)
+	, mShowShortTabGlyphs(false)
 	, mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
 	, mLastClick(-1.0f)
 {
@@ -1195,20 +1196,31 @@ void TextEditor::Render(bool aParentIsFocused)
 					if (mShowWhitespaces)
 					{
 						ImVec2 p1, p2, p3, p4;
-
 						const auto s = ImGui::GetFontSize();
 						const auto x1 = textScreenPos.x + oldX + 1.0f;
-						const auto x2 = textScreenPos.x + bufferOffset.x - 1.0f;
 						const auto y = textScreenPos.y + bufferOffset.y + s * 0.5f;
 
-						p1 = ImVec2(x1, y);
-						p2 = ImVec2(x2, y);
-						p3 = ImVec2(x2 - s * 0.2f, y - s * 0.2f);
-						p4 = ImVec2(x2 - s * 0.2f, y + s * 0.2f);
+						if (mShowShortTabGlyphs)
+						{
+							const auto x2 = textScreenPos.x + oldX + mCharAdvance.x - 1.0f;
+							p1 = ImVec2(x1, y);
+							p2 = ImVec2(x2, y);
+							p3 = ImVec2(x2 - s * 0.16f, y - s * 0.16f);
+							p4 = ImVec2(x2 - s * 0.16f, y + s * 0.16f);
+						}
+						else
+						{
+							const auto x2 = textScreenPos.x + bufferOffset.x - 1.0f;
+							p1 = ImVec2(x1, y);
+							p2 = ImVec2(x2, y);
+							p3 = ImVec2(x2 - s * 0.2f, y - s * 0.2f);
+							p4 = ImVec2(x2 - s * 0.2f, y + s * 0.2f);
+						}
 
-						drawList->AddLine(p1, p2, mPalette[(int)PaletteIndex::ControlCharacter]);
-						drawList->AddLine(p2, p3, mPalette[(int)PaletteIndex::ControlCharacter]);
-						drawList->AddLine(p2, p4, mPalette[(int)PaletteIndex::ControlCharacter]);
+						const auto c = mPalette[(int)PaletteIndex::ControlCharacter];
+						drawList->AddLine(p1, p2, c);
+						drawList->AddLine(p2, p3, c);
+						drawList->AddLine(p2, p4, c);
 					}
 				}
 				else if (glyph.mChar == ' ')
@@ -2029,7 +2041,7 @@ void TextEditor::Backspace(bool aWordMode)
 				MoveRight();
 			return;
 		}
-			
+
 		OnCursorPositionChanged(); // might combine cursors
 		Delete(aWordMode, &stateBeforeDeleting);
 	}
@@ -2321,7 +2333,7 @@ const TextEditor::Palette& TextEditor::GetLightPalette()
 {
 	const static Palette p = { {
 			0x404040ff,	// None
-			0x060cffff,	// Keyword	
+			0x060cffff,	// Keyword
 			0x008000ff,	// Number
 			0xa02020ff,	// String
 			0x704030ff, // Char literal
@@ -2350,7 +2362,7 @@ const TextEditor::Palette& TextEditor::GetRetroBluePalette()
 {
 	const static Palette p = { {
 			0xffff00ff,	// None
-			0x00ffffff,	// Keyword	
+			0x00ffffff,	// Keyword
 			0x00ff00ff,	// Number
 			0x008080ff,	// String
 			0x008080ff, // Char literal
