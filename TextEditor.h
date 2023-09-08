@@ -311,6 +311,9 @@ public:
 	inline void SetShowShortTabGlyphs(bool aValue) { mShowShortTabGlyphs = aValue; }
 	inline bool IsShowingShortTabGlyphs() const { return mShowShortTabGlyphs; }
 
+	inline void SetCompletePairedGlyphs(bool aValue) { mCompletePairedGlyphs = aValue; }
+	inline bool IsCompletingPairedGlyphs() const { return mCompletePairedGlyphs; }
+
 	inline ImVec4 U32ColorToVec4(ImU32 in) {
 		float s = 1.0f / 255.0f;
 		return ImVec4(
@@ -473,6 +476,7 @@ private:
 	bool mShowWhitespaces;
 	bool mShowShortTabGlyphs;
 	float mLongestLineLength;
+	bool mCompletePairedGlyphs;
 
 	Palette mPaletteBase;
 	Palette mPalette;

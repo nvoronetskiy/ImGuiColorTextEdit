@@ -45,6 +45,7 @@ TextEditor::TextEditor()
 	, mShowShortTabGlyphs(false)
 	, mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
 	, mLastClick(-1.0f)
+	, mCompletePairedGlyphs(false)
 {
 	SetPalette(GetDarkPalette());
 	mLines.push_back(Line());
@@ -1687,6 +1688,7 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift)
 			AddGlyphsToLine(coord.mLine + 1, newLine.size(), line.begin() + cindex, line.end());
 			RemoveGlyphsFromLine(coord.mLine, cindex);
 			SetCursorPosition(Coordinates(coord.mLine + 1, GetCharacterColumn(coord.mLine + 1, (int)whitespaceSize)), c);
+			added.mEnd = GetActualCursorCoordinates(c);
 		}
 		else
 		{
@@ -1715,17 +1717,35 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift)
 					u.mOperations.push_back(removed);
 				}
 
-				for (auto p = buf; *p != '\0'; p++, ++cindex)
-					AddGlyphToLine(coord.mLine, cindex, Glyph(*p, PaletteIndex::Default));
-				added.mText = buf;
+				if (mCompletePairedGlyphs && (aChar == '{' || aChar == '[' || aChar == '(' || aChar == '"' || aChar == '\''))
+				{
+					auto closer = aChar == '{' ? '}' : (aChar == '[' ? ']' : (aChar == '(' ? ')' : aChar));
 
-				SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex)), c);
+					AddGlyphToLine(coord.mLine, cindex++, Glyph(aChar, PaletteIndex::Default));
+					AddGlyphToLine(coord.mLine, cindex++, Glyph(closer, PaletteIndex::Default));
+
+					buf[0] = aChar;
+					buf[1] = closer;
+					buf[2] = 0;
+
+					added.mText = buf;
+					added.mEnd = Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex));
+					SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex - 1)), c);
+				}
+				else
+				{
+					for (auto p = buf; *p != '\0'; p++, ++cindex)
+						AddGlyphToLine(coord.mLine, cindex, Glyph(*p, PaletteIndex::Default));
+					added.mText = buf;
+
+					SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex)), c);
+					added.mEnd = GetActualCursorCoordinates(c);
+				}
 			}
 			else
 				continue;
 		}
 
-		added.mEnd = GetActualCursorCoordinates(c);
 		u.mOperations.push_back(added);
 	}
 
