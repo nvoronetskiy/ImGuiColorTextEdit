@@ -21,6 +21,8 @@
 
 class IMGUI_API TextEditor
 {
+	static const std::unordered_map<char, char> OPEN_TO_CLOSE_CHAR;
+	static const std::unordered_map<char, char> CLOSE_TO_OPEN_CHAR;
 public:
 	enum class PaletteIndex
 	{
@@ -131,6 +133,16 @@ public:
 
 	struct EditorState
 	{
+		int mFirstVisibleLine = 0;
+		int mLastVisibleLine = 0;
+		int mVisibleLineCount = 0;
+		int mFirstVisibleColumn = 0;
+		int mLastVisibleColumn = 0;
+		int mVisibleColumnCount = 0;
+		float mContentWidth = 0.0f;
+		float mContentHeight = 0.0f;
+		float mScrollX = 0.0f;
+		float mScrollY = 0.0f;
 		bool mPanning = false;
 		bool mDraggingSelection = false;
 		ImVec2 mLastMousePos;
@@ -361,8 +373,9 @@ public:
 
 	void ClearExtraCursors();
 	void ClearSelections();
-	void SelectNextOccurrenceOf(const char* aText, int aTextSize, int aCursor = -1);
-	void AddCursorForNextOccurrence();
+	void SelectNextOccurrenceOf(const char* aText, int aTextSize, int aCursor = -1, bool aCaseSensitive = true);
+	void AddCursorForNextOccurrence(bool aCaseSensitive = true);
+	void SelectAllOccurrencesOf(const char* aText, int aTextSize, bool aCaseSensitive = true);
 
 	static const Palette& GetMarianaPalette();
 	static const Palette& GetDarkPalette();
@@ -411,7 +424,6 @@ private:
 	void ColorizeInternal();
 	float TextDistanceToLineStart(const Coordinates& aFrom) const;
 	void EnsureCursorVisible(int aCursor = -1);
-	int GetPageSize() const;
 	std::string GetText(const Coordinates& aStart, const Coordinates& aEnd) const;
 	Coordinates GetActualCursorCoordinates(int aCursor = -1) const;
 	Coordinates SanitizeCoordinates(const Coordinates& aValue) const;
@@ -454,7 +466,8 @@ private:
 	void UpdatePalette();
 	void Render(bool aParentIsFocused = false);
 
-	bool FindNextOccurrence(const char* aText, int aTextSize, const Coordinates& aFrom, Coordinates& outStart, Coordinates& outEnd);
+	bool FindNextOccurrence(const char* aText, int aTextSize, const Coordinates& aFrom, Coordinates& outStart, Coordinates& outEnd, bool aCaseSensitive = true);
+	bool FindMatchingBracket(int aLine, int aCharIndex, Coordinates& out);
 
 	float mLineSpacing;
 	Lines mLines;
@@ -466,8 +479,7 @@ private:
 	bool mOverwrite;
 	bool mReadOnly;
 	bool mAutoIndent;
-	bool mWithinRender;
-	bool mScrollToCursor;
+	int mEnsureCursorVisible;
 	bool mScrollToTop;
 	bool mColorizerEnabled;
 	float mTextStart;                   // position (in pixels) where a code line starts relative to the left of the TextEditor.
