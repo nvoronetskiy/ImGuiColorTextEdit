@@ -52,10 +52,11 @@ TextEditor::TextEditor()
 	, mColorRangeMax(0)
 	, mCheckComments(true)
 	, mShowWhitespaces(true)
+	, mShowMatchingBrackets(true)
 	, mShowShortTabGlyphs(false)
+	, mCompletePairedGlyphs(false)
 	, mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
 	, mLastClick(-1.0f)
-	, mCompletePairedGlyphs(false)
 {
 	SetPalette(GetDarkPalette());
 	mLines.push_back(Line());
@@ -1175,7 +1176,7 @@ void TextEditor::Render(bool aParentIsFocused)
 						ImVec2 cend(textScreenPos.x + cx + width, lineStartScreenPos.y + mCharAdvance.y);
 						drawList->AddRectFilled(cstart, cend, mPalette[(int)PaletteIndex::Cursor]);
 
-						if (cindex < (int)line.size())
+						if (mShowMatchingBrackets && cindex < (int)line.size())
 						{
 							Coordinates matchingBracket;
 							if (FindMatchingBracket(lineNo, cindex, matchingBracket))
@@ -1420,10 +1421,14 @@ bool TextEditor::FindMatchingBracket(int aLine, int aCharIndex, Coordinates& out
 
 			if (currentCharIndex == 0)
 			{
-				if (currentLine == 0)
-					break;
-				currentLine--;
-				currentCharIndex = mLines[currentLine].size() - 1;
+				do
+				{
+					if (currentLine == 0)
+						return false;
+					currentLine--;
+				} while (mLines[currentLine].size() == 0); // skip empty lines
+
+				currentCharIndex = (int) mLines[currentLine].size() - 1;
 			}
 			else
 				currentCharIndex--;
@@ -1456,9 +1461,13 @@ bool TextEditor::FindMatchingBracket(int aLine, int aCharIndex, Coordinates& out
 
 			if (currentCharIndex == mLines[currentLine].size())
 			{
-				if (currentLine == mLines.size() - 1)
-					break;
-				currentLine++;
+				do
+				{
+					if (currentLine == mLines.size() - 1)
+						return false;
+					currentLine++;
+				} while (mLines[currentLine].size() == 0);  // skip empty lines
+
 				currentCharIndex = 0;
 			}
 			else

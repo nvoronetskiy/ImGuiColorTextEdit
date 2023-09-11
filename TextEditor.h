@@ -320,6 +320,9 @@ public:
 	inline void SetShowWhitespaces(bool aValue) { mShowWhitespaces = aValue; }
 	inline bool IsShowingWhitespaces() const { return mShowWhitespaces; }
 
+	inline void SetShowMatchingBrackets(bool aValue) { mShowMatchingBrackets = aValue; }
+	inline bool IsShowingMatchingBrackets() const { return mShowMatchingBrackets; }
+
 	inline void SetShowShortTabGlyphs(bool aValue) { mShowShortTabGlyphs = aValue; }
 	inline bool IsShowingShortTabGlyphs() const { return mShowShortTabGlyphs; }
 
@@ -486,9 +489,10 @@ private:
 	int  mLeftMargin;
 	int mColorRangeMin, mColorRangeMax;
 	bool mShowWhitespaces;
+	bool mShowMatchingBrackets;
 	bool mShowShortTabGlyphs;
-	float mLongestLineLength;
 	bool mCompletePairedGlyphs;
+	float mLongestLineLength;
 
 	Palette mPaletteBase;
 	Palette mPalette;
