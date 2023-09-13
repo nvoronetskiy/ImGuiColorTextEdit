@@ -399,19 +399,20 @@ TextEditor::Coordinates TextEditor::ScreenPosToCoordinates(const ImVec2& aPositi
 
 TextEditor::Coordinates TextEditor::FindWordStart(const Coordinates& aFrom) const
 {
-	if (aFrom.mLine >= (int)mLines.size())
-		return aFrom;
+	Coordinates at = aFrom;
+	if (at.mLine >= (int)mLines.size())
+		return at;
 
-	auto& line = mLines[aFrom.mLine];
-	int charIndex = GetCharacterIndexL(aFrom);
+	auto& line = mLines[at.mLine];
+	int charIndex = GetCharacterIndexL(at);
 
 	if (charIndex >= (int)line.size())
-		return aFrom;
+		return at;
 
 	bool initialIsWordChar = IsGlyphWordChar(line[charIndex]);
 	bool initialIsSpace = isspace(line[charIndex].mChar);
 	char initialChar = line[charIndex].mChar;
-	while (Move((int)aFrom.mLine, charIndex, true, true))
+	while (Move(at.mLine, charIndex, true, true))
 	{
 		bool isWordChar = IsGlyphWordChar(line[charIndex]);
 		bool isSpace = isspace(line[charIndex].mChar);
@@ -419,28 +420,29 @@ TextEditor::Coordinates TextEditor::FindWordStart(const Coordinates& aFrom) cons
 			initialIsWordChar && !isWordChar ||
 			!initialIsWordChar && !initialIsSpace && initialChar != line[charIndex].mChar)
 		{
-			Move((int)aFrom.mLine, charIndex, false, true); // one step to the right
+			Move(at.mLine, charIndex, false, true); // one step to the right
 			break;
 		}
 	}
-	return { aFrom.mLine, GetCharacterColumn(aFrom.mLine, charIndex) };
+	return { at.mLine, GetCharacterColumn(at.mLine, charIndex) };
 }
 
 TextEditor::Coordinates TextEditor::FindWordEnd(const Coordinates& aFrom) const
 {
-	if (aFrom.mLine >= (int)mLines.size())
-		return aFrom;
+	Coordinates at = aFrom;
+	if (at.mLine >= (int)mLines.size())
+		return at;
 
-	auto& line = mLines[aFrom.mLine];
-	auto charIndex = GetCharacterIndexL(aFrom);
+	auto& line = mLines[at.mLine];
+	auto charIndex = GetCharacterIndexL(at);
 
 	if (charIndex >= (int)line.size())
-		return aFrom;
+		return at;
 
 	bool initialIsWordChar = IsGlyphWordChar(line[charIndex]);
 	bool initialIsSpace = isspace(line[charIndex].mChar);
 	char initialChar = line[charIndex].mChar;
-	while (Move((int)aFrom.mLine, charIndex, false, true))
+	while (Move(at.mLine, charIndex, false, true))
 	{
 		bool isWordChar = IsGlyphWordChar(line[charIndex]);
 		bool isSpace = isspace(line[charIndex].mChar);
@@ -449,7 +451,7 @@ TextEditor::Coordinates TextEditor::FindWordEnd(const Coordinates& aFrom) const
 			!initialIsWordChar && !initialIsSpace && initialChar != line[charIndex].mChar)
 			break;
 	}
-	return { aFrom.mLine, GetCharacterColumn(aFrom.mLine, charIndex) };
+	return { at.mLine, GetCharacterColumn(at.mLine, charIndex) };
 }
 
 TextEditor::Coordinates TextEditor::FindNextWord(const Coordinates& aFrom) const
@@ -1868,34 +1870,6 @@ void TextEditor::SetReadOnlyEnabled(bool aValue)
 void TextEditor::SetAutoIndentEnabled(bool aValue)
 {
 	mAutoIndent = aValue;
-}
-
-void TextEditor::SetPalette(PaletteId aValue)
-{
-	mPaletteId = aValue;
-	const Palette* palletteBase;
-	switch (mPaletteId)
-	{
-	case PaletteId::Dark:
-		palletteBase = &(GetDarkPalette());
-		break;
-	case PaletteId::Light:
-		palletteBase = &(GetLightPalette());
-		break;
-	case PaletteId::Mariana:
-		palletteBase = &(GetMarianaPalette());
-		break;
-	case PaletteId::RetroBlue:
-		palletteBase = &(GetRetroBluePalette());
-		break;
-	}
-	/* Update palette with the current alpha from style */
-	for (int i = 0; i < (int)PaletteIndex::Max; ++i)
-	{
-		ImVec4 color = U32ColorToVec4((*palletteBase)[i]);
-		color.w *= ImGui::GetStyle().Alpha;
-		mPalette[i] = ImGui::ColorConvertFloat4ToU32(color);
-	}
 }
 
 void TextEditor::OnCursorPositionChanged()
