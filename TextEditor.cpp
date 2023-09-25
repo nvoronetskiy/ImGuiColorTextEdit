@@ -5,6 +5,7 @@
 
 #include "TextEditor.h"
 
+#define IMGUI_SCROLLBAR_WIDTH 14.0f
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h" // for imGui::GetCurrentWindow()
 
@@ -392,7 +393,7 @@ bool TextEditor::Render(const char* aTitle, bool aParentIsFocused, const ImVec2&
 
 // https://en.wikipedia.org/wiki/UTF-8
 // We assume that the char is a standalone character (<128) or a leading byte of an UTF-8 code sequence (non-10xxxxxx code)
-static int UTF8CharLength(uint8_t c)
+static int UTF8CharLength(char c)
 {
 	if ((c & 0xFE) == 0xFC)
 		return 6;
@@ -1579,56 +1580,22 @@ TextEditor::Coordinates TextEditor::ScreenPosToCoordinates(const ImVec2& aPositi
 	if (isOverLineNumber != nullptr)
 		*isOverLineNumber = local.x < mTextStart;
 
-	float spaceSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, " ").x;
-
-	int lineNo = std::max(0, (int)floor(local.y / mCharAdvance.y));
-
-	int columnCoord = 0;
-
-	if (lineNo >= 0 && lineNo < (int)mLines.size())
+	Coordinates out = {
+		Max(0, (int)floor(local.y / mCharAdvance.y)),
+		Max(0, (int)floor((local.x - mTextStart) / mCharAdvance.x))
+	};
+	int charIndex = GetCharacterIndexL(out);
+	if (charIndex > -1 && charIndex < mLines[out.mLine].size() && mLines[out.mLine][charIndex].mChar == '\t')
 	{
-		auto& line = mLines.at(lineNo);
-
-		int columnIndex = 0;
-		std::string cumulatedString = "";
-		float columnWidth = 0.0f;
-		float columnX = 0.0f;
-		int delta = 0;
-
-		// First we find the hovered column coord.
-		for (size_t columnIndex = 0; columnIndex < line.size(); ++columnIndex)
-		{
-			float columnWidth = 0.0f;
-			int delta = 0;
-
-			if (line[columnIndex].mChar == '\t')
-			{
-				float oldX = columnX;
-				columnX = (1.0f + std::floor((1.0f + columnX) / (float(mTabSize) * spaceSize))) * (float(mTabSize) * spaceSize);
-				columnWidth = columnX - oldX;
-				delta = TabSizeAtColumn(columnCoord);
-			}
-			else
-			{
-				char buf[7];
-				auto d = UTF8CharLength(line[columnIndex].mChar);
-				int i = 0;
-				while (i < 6 && d-- > 0)
-					buf[i++] = line[columnIndex].mChar;
-				buf[i] = '\0';
-				columnWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf).x;
-				columnX += columnWidth;
-				delta = 1;
-			}
-
-			if (mTextStart + columnX - (aInsertionMode ? 0.5f : 0.0f) * columnWidth < local.x)
-				columnCoord += delta;
-			else
-				break;
-		}
+		int columnToLeft = GetCharacterColumn(out.mLine, charIndex);
+		int columnToRight = GetCharacterColumn(out.mLine, GetCharacterIndexR(out));
+		if (out.mColumn - columnToLeft < columnToRight - out.mColumn)
+			out.mColumn = columnToLeft;
+		else
+			out.mColumn = columnToRight;
 	}
 
-	return SanitizeCoordinates(Coordinates(lineNo, columnCoord));
+	return SanitizeCoordinates(out);
 }
 
 TextEditor::Coordinates TextEditor::FindWordStart(const Coordinates& aFrom) const
@@ -2019,9 +1986,9 @@ void TextEditor::HandleKeyboardInputs(bool aParentIsFocused)
 			Backspace(ctrl);
 		else if (!mReadOnly && !alt && ctrl && shift && !super && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_K)))
 			RemoveCurrentLines();
-		else if (!mReadOnly && !alt && ctrl && !shift && !super && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftBracket)))
+		else if (!mReadOnly && isShortcut && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftBracket)))
 			ChangeCurrentLinesIndentation(false);
-		else if (!mReadOnly && !alt && ctrl && !shift && !super && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightBracket)))
+		else if (!mReadOnly && isShortcut && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightBracket)))
 			ChangeCurrentLinesIndentation(true);
 		else if (!alt && ctrl && shift && !super && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)))
 			MoveUpCurrentLines();
@@ -2215,20 +2182,21 @@ void TextEditor::Render(bool aParentIsFocused)
 	ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
 	mScrollX = ImGui::GetScrollX();
 	mScrollY = ImGui::GetScrollY();
-	mContentHeight = ImGui::GetWindowHeight();
-	mContentWidth = ImGui::GetWindowWidth();
+	mContentHeight = ImGui::GetWindowHeight() - (IsHorizontalScrollbarVisible() ? IMGUI_SCROLLBAR_WIDTH : 0.0f);
+	mContentWidth = ImGui::GetWindowWidth() - (IsVerticalScrollbarVisible() ? IMGUI_SCROLLBAR_WIDTH : 0.0f);
 
 	mVisibleLineCount = Max((int)ceil(mContentHeight / mCharAdvance.y), 0);
 	mFirstVisibleLine = Max((int)(mScrollY / mCharAdvance.y), 0);
 	mLastVisibleLine = Max((int)((mContentHeight + mScrollY) / mCharAdvance.y), 0);
 
-	mVisibleColumnCount = Max((int)ceil((mContentWidth - std::max(mTextStart - mScrollX, 0.0f)) / mCharAdvance.x), 0);
-	mFirstVisibleColumn = Max((int)(std::max(mScrollX - mTextStart, 0.0f) / mCharAdvance.x), 0);
+	mVisibleColumnCount = Max((int)ceil((mContentWidth - Max(mTextStart - mScrollX, 0.0f)) / mCharAdvance.x), 0);
+	mFirstVisibleColumn = Max((int)(Max(mScrollX - mTextStart, 0.0f) / mCharAdvance.x), 0);
 	mLastVisibleColumn = Max((int)((mContentWidth + mScrollX - mTextStart) / mCharAdvance.x), 0);
 
 	auto io = ImGui::GetIO();
 	mCursorAnimationTimer = std::fmod(mCursorAnimationTimer + io.DeltaTime, 1.0f);
 
+	int maxColumnLimited = 0;
 	if (!mLines.empty())
 	{
 		float spaceSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
@@ -2239,8 +2207,7 @@ void TextEditor::Render(bool aParentIsFocused)
 			ImVec2 textScreenPos = ImVec2(lineStartScreenPos.x + mTextStart, lineStartScreenPos.y);
 
 			auto& line = mLines[lineNo];
-			int maxColumnLimited = GetLineMaxColumn(lineNo, mLastVisibleColumn);
-			mCurrentSpaceWidth = std::max(mTextStart + TextDistanceToLineStart(Coordinates(lineNo, maxColumnLimited + mVisibleColumnCount), false), mCurrentSpaceWidth);
+			maxColumnLimited = Max(GetLineMaxColumn(lineNo, mLastVisibleColumn), maxColumnLimited);
 
 			Coordinates lineStartCoord(lineNo, 0);
 			Coordinates lineEndCoord(lineNo, maxColumnLimited);
@@ -2417,9 +2384,11 @@ void TextEditor::Render(bool aParentIsFocused)
 			}
 		}
 	}
+	mCurrentSpaceHeight = (mLines.size() + Min(mVisibleLineCount - 1, (int)mLines.size())) * mCharAdvance.y;
+	mCurrentSpaceWidth = Max((maxColumnLimited + Min(mVisibleColumnCount - 1, maxColumnLimited)) * mCharAdvance.x, mCurrentSpaceWidth);
 
 	ImGui::SetCursorPos(ImVec2(0, 0));
-	ImGui::Dummy(ImVec2(mCurrentSpaceWidth, (mLines.size() + mVisibleLineCount - 1) * mCharAdvance.y));
+	ImGui::Dummy(ImVec2(mCurrentSpaceWidth, mCurrentSpaceHeight));
 
 	if (mEnsureCursorVisible > -1)
 	{

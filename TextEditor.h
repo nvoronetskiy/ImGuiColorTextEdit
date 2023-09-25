@@ -159,7 +159,7 @@ public:
 private:
 	// ------------- Generic utils ------------- //
 
-	inline ImVec4 U32ColorToVec4(ImU32 in) const
+	static inline ImVec4 U32ColorToVec4(ImU32 in)
 	{
 		float s = 1.0f / 255.0f;
 		return ImVec4(
@@ -168,18 +168,14 @@ private:
 			((in >> IM_COL32_G_SHIFT) & 0xFF) * s,
 			((in >> IM_COL32_R_SHIFT) & 0xFF) * s);
 	}
-	inline bool IsUTFSequence(char c) const
+	static inline bool IsUTFSequence(char c)
 	{
 		return (c & 0xC0) == 0x80;
 	}
-	inline int TabSizeAtColumn(int aColumn) const
-	{
-		return mTabSize - (aColumn % mTabSize);
-	}
 	template<typename T>
-	inline T Max(T a, T b) { return a > b ? a : b; }
+	static inline T Max(T a, T b) { return a > b ? a : b; }
 	template<typename T>
-	inline T Min(T a, T b) { return a < b ? a : b; }
+	static inline T Min(T a, T b) { return a < b ? a : b; }
 
 	// ------------- Internal ------------- //
 
@@ -275,13 +271,13 @@ private:
 
 	struct Glyph
 	{
-		uint8_t mChar;
+		char mChar;
 		PaletteIndex mColorIndex = PaletteIndex::Default;
 		bool mComment : 1;
 		bool mMultiLineComment : 1;
 		bool mPreprocessor : 1;
 
-		Glyph(uint8_t aChar, PaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex),
+		Glyph(char aChar, PaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex),
 			mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
 	};
 
@@ -420,6 +416,7 @@ private:
 	float mTextStart = 20.0f; // position (in pixels) where a code line starts relative to the left of the TextEditor.
 	int mLeftMargin = 10;
 	ImVec2 mCharAdvance;
+	float mCurrentSpaceHeight = 20.0f;
 	float mCurrentSpaceWidth = 20.0f;
 	float mLastClick = -1.0f;
 	int mFirstVisibleLine = 0;
@@ -450,6 +447,10 @@ private:
 	const LanguageDefinition* mLanguageDefinition = nullptr;
 	RegexList mRegexList;
 	std::string mLineBuffer;
+
+	inline bool IsHorizontalScrollbarVisible() const { return mCurrentSpaceWidth > mContentWidth; }
+	inline bool IsVerticalScrollbarVisible() const { return mCurrentSpaceHeight > mContentHeight; }
+	inline int TabSizeAtColumn(int aColumn) const { return mTabSize - (aColumn % mTabSize); }
 
 	static const std::unordered_map<char, char> OPEN_TO_CLOSE_CHAR;
 	static const std::unordered_map<char, char> CLOSE_TO_OPEN_CHAR;
