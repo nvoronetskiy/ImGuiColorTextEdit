@@ -15,7 +15,8 @@ one by Santiago:
 - Auto complete for paired glyphs (\[, \{, \(, \", \') (can be turned on and off).
 - Support blinking cursor (can be turned on/off using ImGui's global io.ConfigInputTextCursorBlink flag).
 - Allow bracked matching to be turned on and off.
-- Improve keyboard shortcuts on MacOS
+- Improve keyboard shortcuts on MacOS.
+- Allow ImGuiTextEdit instantiation before ImGui context is initialized.
 
 Within reason, all efforts are made to stay in sync with Santiago's fork.
 

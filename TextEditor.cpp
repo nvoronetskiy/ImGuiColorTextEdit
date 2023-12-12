@@ -26,7 +26,7 @@ TextEditor::~TextEditor()
 void TextEditor::SetPalette(const Palette& aValue)
 {
 	mPaletteBase = aValue;
-	UpdatePalette();
+	mPaletteAlpha = -1.0f;
 }
 
 void TextEditor::SetLanguageDefinition(const LanguageDefinition& aLanguageDef)
