@@ -910,6 +910,7 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift)
 			anyCursorHasMultilineSelection = true;
 			break;
 		}
+
 	bool isIndentOperation = hasSelection && anyCursorHasMultilineSelection && aChar == '\t';
 	if (isIndentOperation)
 	{
@@ -919,6 +920,50 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift)
 
 	UndoRecord u;
 	u.mBefore = mState;
+
+	bool bracketSelection = hasSelection && mCompletePairedGlyphs && (aChar == '{' || aChar == '[' || aChar == '(' || aChar == '"' || aChar == '\'');
+	if (bracketSelection) {
+		auto closer = aChar == '{' ? '}' : (aChar == '[' ? ']' : (aChar == '(' ? ')' : aChar));
+
+		for (int c = mState.mCurrentCursor; c > -1; c--)
+		{
+			auto coord = GetActualCursorCoordinates(c);
+			auto cindex = GetCharacterIndexR(coord);
+			AddGlyphToLine(coord.mLine, cindex++, Glyph(closer, PaletteIndex::Default));
+
+			UndoOperation added;
+			added.mType = UndoOperationType::Add;
+			added.mStart = coord;
+			added.mEnd = Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex));
+			auto end = Coordinates(added.mEnd.mLine, added.mEnd.mColumn + 1);
+
+			char buf[2];
+			buf[0] = closer;
+			buf[1] = 0;
+			added.mText = buf;
+			u.mOperations.push_back(added);
+
+			coord = GetActualCursorCoordinates(c, true);
+			cindex = GetCharacterIndexR(coord);
+			AddGlyphToLine(coord.mLine, cindex++, Glyph(aChar, PaletteIndex::Default));
+
+			added.mStart = coord;
+			added.mEnd = Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex));
+
+			buf[0] = aChar;
+			added.mText = buf;
+			u.mOperations.push_back(added);
+
+			SetCursorPosition(end, c);
+			Colorize(coord.mLine, end.mLine - coord.mLine + 1);
+		}
+
+
+		ClearSelections();
+		u.mAfter = mState;
+		AddUndo(u);
+		return;
+	}
 
 	if (hasSelection)
 	{
@@ -989,9 +1034,10 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift)
 					u.mOperations.push_back(removed);
 				}
 
-				if (mCompletePairedGlyphs && (aChar == '{' || aChar == '[' || aChar == '(' || aChar == '"' || aChar == '\''))
+				// automatically complete paired glyphs when feature is turned on
+				if (mCompletePairedGlyphs && (aChar == '{' || aChar == '[' || aChar == '('))
 				{
-					auto closer = aChar == '{' ? '}' : (aChar == '[' ? ']' : (aChar == '(' ? ')' : aChar));
+					auto closer = aChar == '{' ? '}' : (aChar == '[' ? ']' : ')');
 
 					AddGlyphToLine(coord.mLine, cindex++, Glyph(aChar, PaletteIndex::Default));
 					AddGlyphToLine(coord.mLine, cindex++, Glyph(closer, PaletteIndex::Default));
@@ -1003,6 +1049,40 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift)
 					added.mText = buf;
 					added.mEnd = Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex));
 					SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex - 1)), c);
+				}
+				// if the glyph is closing and the following character is the same, just skip it in complete pair mode
+				else if (mCompletePairedGlyphs && (aChar == '}' || aChar == ']' || aChar == ')'))
+				{
+					if (line.size() > cindex && line[cindex].mChar == aChar)
+						SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, ++cindex)), c);
+					else
+					{
+						AddGlyphToLine(coord.mLine, cindex++, Glyph(aChar, PaletteIndex::Default));
+						buf[0] = aChar;
+						buf[1] = 0;
+						added.mText = buf;
+						added.mEnd = Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex));
+						SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex)), c);
+					}
+				}
+				// special handling for "quoted" glyph pairs
+				else if (mCompletePairedGlyphs && (aChar == '"' || aChar == '\''))
+				{
+					if (line.size() > cindex && line[cindex].mChar == aChar)
+						SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, ++cindex)), c);
+					else
+					{
+						AddGlyphToLine(coord.mLine, cindex++, Glyph(aChar, PaletteIndex::Default));
+						AddGlyphToLine(coord.mLine, cindex++, Glyph(aChar, PaletteIndex::Default));
+
+						buf[0] = aChar;
+						buf[1] = aChar;
+						buf[2] = 0;
+
+						added.mText = buf;
+						added.mEnd = Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex));
+						SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex - 1)), c);
+					}
 				}
 				else
 				{
@@ -2036,7 +2116,7 @@ void TextEditor::HandleKeyboardInputs(bool aParentIsFocused)
 			SelectAll();
 		else if (isShortcut && ImGui::IsKeyPressed(ImGuiKey_D))
 			AddCursorForNextOccurrence();
-        else if (!mReadOnly && !alt && !ctrl && !shift && !super && (ImGui::IsKeyPressed(ImGuiKey_Enter)) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))
+        else if (!mReadOnly && !alt && !ctrl && !shift && !super && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))
 			EnterCharacter('\n', false);
 		else if (!mReadOnly && !alt && !ctrl && !super && ImGui::IsKeyPressed(ImGuiKey_Tab))
 			EnterCharacter('\t', shift);

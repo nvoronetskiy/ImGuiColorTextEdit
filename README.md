@@ -14,8 +14,10 @@ one by Santiago:
 - Ability to have error markers is restored.
 - Ability to choose (at compile time) between boost::regex and std::regex (the latter makes this repository dependency free)
 - Auto complete for paired glyphs (\[, \{, \(, \", \') (can be turned on and off).
+- If auto complete is turned on, accidentally typed closing glyphs are ignored.
+- If auto complete is turned on, selections can be surrounded by paired glyphs.
 - Support blinking cursor (can be turned on/off using ImGui's global io.ConfigInputTextCursorBlink flag).
-- Allow bracked matching to be turned on and off.
+- Allow bracket matching to be turned on and off.
 - Improve keyboard shortcuts on MacOS.
 - Allow ImGuiTextEdit instantiation before ImGui context is initialized.
 
