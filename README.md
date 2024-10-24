@@ -8,7 +8,7 @@ A recent fork by [Santiago](https://github.com/santaclose/ImGuiColorTextEdit), a
 actively maintained version and this repository is a fork of it. Following is a list of difference between this fork and the
 one by Santiago:
 
-- Works with latest Dear ImGui version (currently v1.90.9) and does not use deprecated functions.
+- Works with latest Dear ImGui version (currently v1.91.3) and does not use deprecated functions.
 - Ability to specify custom syntax highlighting for other languages is restored.
 - Ability to have custom palettes is restored.
 - Ability to have error markers is restored.
