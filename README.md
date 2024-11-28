@@ -22,6 +22,7 @@ Following is a list of differences between this fork and the one by Santiago:
 - Allows ImGuiTextEdit instantiation before ImGui context is initialized.
 - Enhanced API to support external find/replace functionality.
 - Search also has the option to search for whole words.
+- Use Dear ImGui's assert mechanism to be consistent with other widgets.
 
 Within reason, all efforts are made to stay in sync with Santiago's fork.
 
