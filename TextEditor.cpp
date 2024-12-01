@@ -2452,6 +2452,8 @@ void TextEditor::Render(bool aParentIsFocused)
 						mPalette[(int)PaletteIndex::Selection]);
 			}
 
+			auto errorIt = mErrorMarkers.find(lineNo + 1);
+
 			// Draw line number (right aligned)
 			if (mShowLineNumbers)
 			{
@@ -2459,11 +2461,10 @@ void TextEditor::Render(bool aParentIsFocused)
 				float lineNoWidth = (digits + 2) * mCharAdvance.x;
 
 				// Draw error marker (if required)
-				auto errorIt = mErrorMarkers.find(lineNo + 1);
 				if (errorIt != mErrorMarkers.end())
 				{
-					auto start = ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y);
-					auto end = ImVec2(start.x + digits * mCharAdvance.x, lineStartScreenPos.y + mCharAdvance.y);
+					auto start = ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth - 2, lineStartScreenPos.y);
+					auto end = ImVec2(start.x + digits * mCharAdvance.x + 4, lineStartScreenPos.y + mCharAdvance.y);
 					drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::ErrorMarker]);
 
 					// Draw tooltip (if mouse is hovering over line number)
@@ -2598,6 +2599,14 @@ void TextEditor::Render(bool aParentIsFocused)
 				}
 
 				MoveCharIndexAndColumn(lineNo, charIndex, column);
+			}
+
+			if (errorIt != mErrorMarkers.end())
+			{
+				// underline error line
+				auto start = ImVec2(lineStartScreenPos.x, lineStartScreenPos.y + mCharAdvance.y - 4);
+				auto end = ImVec2(lineStartScreenPos.x + mContentWidth, lineStartScreenPos.y + mCharAdvance.y - 1);
+				drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::ErrorMarker]);
 			}
 		}
 	}
