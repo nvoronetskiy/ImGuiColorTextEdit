@@ -24,6 +24,7 @@ Following is a list of differences between this fork and the one by Santiago:
 - Search also has the option to search for whole words.
 - Use Dear ImGui's assert mechanism to be consistent with other widgets.
 - Improved auto indent with simplified implementation.
+- Added fast API to see if editor is empty.
 
 Within reason, all efforts are made to stay in sync with Santiago's fork.
 
