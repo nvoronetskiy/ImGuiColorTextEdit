@@ -25,6 +25,7 @@ Following is a list of differences between this fork and the one by Santiago:
 - Use Dear ImGui's assert mechanism to be consistent with other widgets.
 - Improved auto indent with simplified implementation.
 - Added fast API to see if editor is empty.
+- Added API to strip trailing whitespaces.
 
 Within reason, all efforts are made to stay in sync with Santiago's fork.
 
