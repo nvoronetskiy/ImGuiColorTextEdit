@@ -1652,6 +1652,9 @@ void TextEditor::ToggleLineComment()
 
 void TextEditor::RemoveCurrentLines()
 {
+	if (IsEmpty())
+		return;
+
 	UndoRecord u;
 	u.mBefore = mState;
 
