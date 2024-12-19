@@ -3037,19 +3037,6 @@ void TextEditor::ColorizeInternal()
 	}
 }
 
-// this should be replaced with ImGui::ColorConvertU32ToFloat4
-// this widget uses ImU32 color coding differently from ImGui (RGBA vs ABGR)
-
-static inline ImVec4 U32ColorToVec4(ImU32 in)
-{
-	float s = 1.0f / 255.0f;
-	return ImVec4(
-		((in >> IM_COL32_A_SHIFT) & 0xFF) * s,
-		((in >> IM_COL32_B_SHIFT) & 0xFF) * s,
-		((in >> IM_COL32_G_SHIFT) & 0xFF) * s,
-		((in >> IM_COL32_R_SHIFT) & 0xFF) * s);
-}
-
 void TextEditor::UpdatePalette()
 {
 	// Update palette with the current alpha from style
@@ -3057,7 +3044,7 @@ void TextEditor::UpdatePalette()
 
 	for (int i = 0; i < (int)PaletteIndex::Max; ++i)
 	{
-		auto color = U32ColorToVec4(mPaletteBase[i]);
+		auto color = ImGui::ColorConvertU32ToFloat4(mPaletteBase[i]);
 		color.w *= mPaletteAlpha;
 		mPalette[i] = ImGui::ColorConvertFloat4ToU32(color);
 	}
@@ -3066,107 +3053,112 @@ void TextEditor::UpdatePalette()
 const TextEditor::Palette& TextEditor::GetDarkPalette()
 {
 	const static Palette p = { {
-			0xdcdfe4ff,	// Default
-			0xe06c75ff,	// Keyword
-			0xe5c07bff,	// Number
-			0x98c379ff,	// String
-			0xe0a070ff, // Char literal
-			0x6a7384ff, // Punctuation
-			0x808040ff,	// Preprocessor
-			0xdcdfe4ff, // Identifier
-			0x61afefff, // Known identifier
-			0xc678ddff, // Preproc identifier
-			0x3696a2ff, // Comment (single line)
-			0x3696a2ff, // Comment (multi line)
-			0x282c34ff, // Background
-			0xe0e0e0ff, // Cursor
-			0x2060a080, // Selection
-			0xff200080, // ErrorMarker
-			0xffffff15, // ControlCharacter
-			0x0080f040, // Breakpoint
-			0x7a8394ff, // Line number
-			0xffffffff, // Current line number
-		} };
+		IM_COL32(220, 223, 228, 255),	// Default
+		IM_COL32(224, 108, 117, 255),	// Keyword
+		IM_COL32(229, 192, 123, 255),	// Number
+		IM_COL32(152, 195, 121, 255),	// String
+		IM_COL32(224, 160, 112, 255),	// Char literal
+		IM_COL32(106, 115, 132, 255),	// Punctuation
+		IM_COL32(128, 128,  64, 255),	// Preprocessor
+		IM_COL32(220, 223, 228, 255),	// Identifier
+		IM_COL32( 97, 175, 239, 255),	// Known identifier
+		IM_COL32(198, 120, 221, 255),	// Preproc identifier
+		IM_COL32( 54, 150, 162, 255),	// Comment (single line)
+		IM_COL32( 54, 150, 162, 255),	// Comment (multi line)
+		IM_COL32( 40,  44,  52, 255),	// Background
+		IM_COL32(224, 224, 224, 255),	// Cursor
+		IM_COL32( 32,  96, 160, 128),	// Selection
+		IM_COL32(255,  32,   0, 128),	// ErrorMarker
+		IM_COL32(255, 255, 255,  21),	// ControlCharacter
+		IM_COL32(  0, 128, 240,  64),	// Breakpoint
+		IM_COL32(122, 131, 148, 255),	// Line number
+		IM_COL32(255, 255, 255, 255),	// Current line number
+	} };
+
 	return p;
 }
 
 const TextEditor::Palette& TextEditor::GetMarianaPalette()
 {
 	const static Palette p = { {
-			0xffffffff,	// Default
-			0xc695c6ff,	// Keyword
-			0xf9ae58ff,	// Number
-			0x99c794ff,	// String
-			0xe0a070ff, // Char literal
-			0x5fb4b4ff, // Punctuation
-			0x808040ff,	// Preprocessor
-			0xffffffff, // Identifier
-			0x4dc69bff, // Known identifier
-			0xe0a0ffff, // Preproc identifier
-			0xa6acb9ff, // Comment (single line)
-			0xa6acb9ff, // Comment (multi line)
-			0x303841ff, // Background
-			0xe0e0e0ff, // Cursor
-			0x6e7a8580, // Selection
-			0xec5f6680, // ErrorMarker
-			0xffffff30, // ControlCharacter
-			0x0080f040, // Breakpoint
-			0xffffffb0, // Line number
-			0xffffffff, // Current line number
-		} };
+		IM_COL32(255, 255, 255, 255),	// Default
+		IM_COL32(198, 149, 198, 255),	// Keyword
+		IM_COL32(249, 174,  88, 255),	// Number
+		IM_COL32(153, 199, 148, 255),	// String
+		IM_COL32(224, 160, 112, 255),	// Char literal
+		IM_COL32( 95, 180, 180, 255),	// Punctuation
+		IM_COL32(128, 128,  64, 255),	// Preprocessor
+		IM_COL32(255, 255, 255, 255),	// Identifier
+		IM_COL32( 77, 198, 155, 255),	// Known identifier
+		IM_COL32(224, 160, 255, 255),	// Preproc identifier
+		IM_COL32(166, 172, 185, 255),	// Comment (single line)
+		IM_COL32(166, 172, 185, 255),	// Comment (multi line)
+		IM_COL32( 48,  56,  65, 255),	// Background
+		IM_COL32(224, 224, 224, 255),	// Cursor
+		IM_COL32(110, 122, 133, 128),	// Selection
+		IM_COL32(236,  95, 102, 128),	// ErrorMarker
+		IM_COL32(255, 255, 255,  48),	// ControlCharacter
+		IM_COL32(  0, 128, 240,  64),	// Breakpoint
+		IM_COL32(255, 255, 255, 176),	// Line number
+		IM_COL32(255, 255, 255, 255),	// Current line number
+	} };
+
 	return p;
 }
 
 const TextEditor::Palette& TextEditor::GetLightPalette()
 {
 	const static Palette p = { {
-			0x404040ff,	// None
-			0x060cffff,	// Keyword
-			0x008000ff,	// Number
-			0xa02020ff,	// String
-			0x704030ff, // Char literal
-			0x000000ff, // Punctuation
-			0x606040ff,	// Preprocessor
-			0x404040ff, // Identifier
-			0x106060ff, // Known identifier
-			0xa040c0ff, // Preproc identifier
-			0x205020ff, // Comment (single line)
-			0x205040ff, // Comment (multi line)
-			0xffffffff, // Background
-			0x000000ff, // Cursor
-			0x00006040, // Selection
-			0xff1000a0, // ErrorMarker
-			0x90909090, // ControlCharacter
-			0x0080f080, // Breakpoint
-			0x005050ff, // Line number
-			0x000000ff, // Current line number
-		} };
+		IM_COL32( 64,  64,  64, 255),	// Default
+		IM_COL32(  6,  12, 255, 255),	// Keyword
+		IM_COL32(  0, 128,   0, 255),	// Number
+		IM_COL32(160,  32,  32, 255),	// String
+		IM_COL32(112,  64,  48, 255),	// Char literal
+		IM_COL32(  0,   0,   0, 255),	// Punctuation
+		IM_COL32( 96,  96,  64, 255),	// Preprocessor
+		IM_COL32( 64,  64,  64, 255),	// Identifier
+		IM_COL32( 16,  96,  96, 255),	// Known identifier
+		IM_COL32(160,  64, 192, 255),	// Preproc identifier
+		IM_COL32( 32,  80,  32, 255),	// Comment (single line)
+		IM_COL32( 32,  80,  64, 255),	// Comment (multi line)
+		IM_COL32(255, 255, 255, 255),	// Background
+		IM_COL32(  0,   0,   0, 255),	// Cursor
+		IM_COL32(  0,   0,  96,  64),	// Selection
+		IM_COL32(255,  16,   0, 160),	// ErrorMarker
+		IM_COL32(144, 144, 144, 144),	// ControlCharacter
+		IM_COL32(  0, 128, 240, 128),	// Breakpoint
+		IM_COL32(  0,  80,  80, 255),	// Line number
+		IM_COL32(  0,   0,   0, 255),	// Current line number
+	} };
+
 	return p;
 }
 
 const TextEditor::Palette& TextEditor::GetRetroBluePalette()
 {
 	const static Palette p = { {
-			0xffff00ff,	// None
-			0x00ffffff,	// Keyword
-			0x00ff00ff,	// Number
-			0x008080ff,	// String
-			0x008080ff, // Char literal
-			0xffffffff, // Punctuation
-			0x008000ff,	// Preprocessor
-			0xffff00ff, // Identifier
-			0xffffffff, // Known identifier
-			0xff00ffff, // Preproc identifier
-			0x808080ff, // Comment (single line)
-			0x404040ff, // Comment (multi line)
-			0x000080ff, // Background
-			0xff8000ff, // Cursor
-			0x00ffff80, // Selection
-			0xff0000a0, // ErrorMarker
-			0x0080ff80, // Breakpoint
-			0x008080ff, // Line number
-			0xffffffff, // Current line number
-		} };
+		IM_COL32(255, 255,   0, 255),	// Default
+		IM_COL32(  0, 255, 255, 255),	// Keyword
+		IM_COL32(  0, 255,   0, 255),	// Number
+		IM_COL32(  0, 128, 128, 255),	// String
+		IM_COL32(  0, 128, 128, 255),	// Char literal
+		IM_COL32(255, 255, 255, 255),	// Punctuation
+		IM_COL32(  0, 128,   0, 255),	// Preprocessor
+		IM_COL32(255, 255,   0, 255),	// Identifier
+		IM_COL32(255, 255, 255, 255),	// Known identifier
+		IM_COL32(255,   0, 255, 255),	// Preproc identifier
+		IM_COL32(128, 128, 128, 255),	// Comment (single line)
+		IM_COL32( 64,  64,  64, 255),	// Comment (multi line)
+		IM_COL32(  0,   0, 128, 255),	// Background
+		IM_COL32(255, 128,   0, 255),	// Cursor
+		IM_COL32(  0, 255, 255, 128),	// Selection
+		IM_COL32(255,   0,   0, 160),	// ErrorMarker
+		IM_COL32(255, 255, 255,  80),	// ControlCharacter
+		IM_COL32(  0, 128, 255, 128),	// Breakpoint
+		IM_COL32(  0, 128, 128, 255),	// Line number
+		IM_COL32(255, 255, 255, 255),	// Current line number
+	} };
+
 	return p;
 }
 

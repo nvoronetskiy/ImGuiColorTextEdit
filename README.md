@@ -11,6 +11,7 @@ Following is a list of differences between this fork and the one by Santiago:
 - Works with latest Dear ImGui version (currently v1.91.5) and does not use deprecated functions.
 - Ability to specify custom syntax highlighting for other languages is restored.
 - Ability to have custom palettes is restored.
+- Color palettes are now expressed using ImGui standards.
 - Ability to have error markers is restored.
 - Ability to choose (at compile time) between boost::regex and std::regex (the latter makes this repository dependency free).
 - Provides auto complete for paired glyphs (\[, \{, \(, \", \') (can be turned on and off).
