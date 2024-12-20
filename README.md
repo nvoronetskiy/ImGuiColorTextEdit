@@ -27,6 +27,8 @@ Following is a list of differences between this fork and the one by Santiago:
 - Improved auto indent with simplified implementation.
 - Added fast API to see if editor is empty.
 - Added API to strip trailing whitespaces.
+- Code cleaned up, restructured and bug fixed.
+- In general, behavior is more like Visual Studio Code.
 
 Within reason, all efforts are made to stay in sync with Santiago's fork.
 

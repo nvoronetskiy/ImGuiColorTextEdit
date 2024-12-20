@@ -309,7 +309,7 @@ private:
 	};
 
 	std::string GetText(const Coordinates& aStart, const Coordinates& aEnd) const;
-	std::string GetClipboardText() const;
+	std::string GetAllSelectedText() const;
 	std::string GetSelectedText(int aCursor = -1) const;
 
 	void SetCursorPosition(const Coordinates& aPosition, int aCursor = -1, bool aClearSelection = true);
@@ -330,7 +330,7 @@ private:
 	void MoveBottom(bool aSelect = false);
 	void MoveHome(bool aSelect = false);
 	void MoveEnd(bool aSelect = false);
-	void EnterCharacter(ImWchar aChar, bool aShift);
+	void EnterCharacter(ImWchar aChar);
 	void Backspace(bool aWordMode = false);
 	void Delete(bool aWordMode = false, const EditorState* aEditorState = nullptr);
 
