@@ -190,7 +190,6 @@ private:
 			IM_ASSERT(aLine >= 0);
 			IM_ASSERT(aColumn >= 0);
 		}
-		static Coordinates Invalid() { static Coordinates invalid(-1, -1); return invalid; }
 
 		bool operator ==(const Coordinates& o) const
 		{
@@ -292,8 +291,7 @@ private:
 	class UndoRecord
 	{
 	public:
-		UndoRecord() {}
-		~UndoRecord() {}
+		UndoRecord() = default;
 
 		UndoRecord(
 			const std::vector<UndoOperation>& aOperations,
@@ -317,6 +315,8 @@ private:
 
 	int InsertTextAt(Coordinates& aWhere, const char* aValue);
 	void InsertTextAtCursor(const char* aValue, int aCursor = -1);
+	void InsertLineBelow();
+	void InsertLineAbove();
 
 	enum class MoveDirection { Right = 0, Left = 1, Up = 2, Down = 3 };
 	bool Move(int& aLine, int& aCharIndex, bool aLeft = false, bool aLockLine = false) const;
