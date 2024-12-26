@@ -167,6 +167,7 @@ public:
 
 	// useful editor functions
 	void StripTrailingWhitespaces();
+	void FilterLines(std::function<std::string(std::string)> filter);
 
 	// render the editor in a Dear ImGui context
 	void Render(const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
@@ -359,7 +360,6 @@ private:
 
 	void AddUndo(UndoRecord& aValue);
 
-	void CheckComments();
 	void Colorize(int aFromLine = 0, int aCount = -1);
 	void ColorizeRange(int aFromLine = 0, int aToLine = 0);
 	void ColorizeInternal();
@@ -390,7 +390,6 @@ private:
 	SetViewAtLineMode mSetViewAtLineMode;
 	int mEnsureCursorVisible = -1;
 	bool mEnsureCursorVisibleStartToo = false;
-	bool mScrollToTop = false;
 
 	float mTextStart = 20.0f; // position (in pixels) where a code line starts relative to the left of the TextEditor.
 	int mLeftMargin = 10;
