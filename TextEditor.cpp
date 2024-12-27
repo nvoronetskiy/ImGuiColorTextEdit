@@ -435,6 +435,81 @@ void TextEditor::FilterLines(std::function<std::string(std::string)> filter)
 	}
 }
 
+void TextEditor::TabsToSpaces()
+{
+	FilterLines([this](const std::string& input)
+	{
+		std::string output;
+
+		for (auto c : input)
+			if (c == '\t')
+				output.append(mTabSize - (output.size() % mTabSize), ' ');
+			else
+				output += c;
+
+		return output;
+	});
+}
+
+void TextEditor::SpacesToTabs()
+{
+	FilterLines([this](const std::string& input)
+	{
+		std::string output;
+		int pos = 0;
+		int spaces = 0;
+
+		for (auto c : input)
+		{
+			if (c == ' ')
+				spaces++;
+			else
+			{
+				while (spaces)
+				{
+					int spacesUntilNextTab = mTabSize - (pos % mTabSize);
+
+					if (spacesUntilNextTab == 1)
+					{
+						output += ' ';
+						pos++;
+						spaces--;
+					}
+					else if (spaces >= spacesUntilNextTab)
+					{
+						output += '\t';
+						pos += spacesUntilNextTab;
+						spaces -= spacesUntilNextTab;
+					}
+					else if (c != '\t')
+						while (spaces)
+						{
+							output += ' ';
+							pos++;
+							spaces--;
+						}
+
+					else
+						spaces = 0;
+				}
+
+				if (c == '\t')
+				{
+					output += '\t';
+					pos += mTabSize - (pos % mTabSize);
+				}
+				else
+				{
+					output += c;
+					pos++;
+				}
+			}
+		}
+
+		return output;
+	});
+}
+
 void TextEditor::Render(const char* aTitle, const ImVec2& aSize, bool aBorder)
 {
 	if (mCursorPositionChanged)

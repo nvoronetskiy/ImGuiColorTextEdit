@@ -168,6 +168,8 @@ public:
 	// useful editor functions
 	void StripTrailingWhitespaces();
 	void FilterLines(std::function<std::string(std::string)> filter);
+	void TabsToSpaces();
+	void SpacesToTabs();
 
 	// render the editor in a Dear ImGui context
 	void Render(const char* aTitle, const ImVec2& aSize = ImVec2(), bool aBorder = false);
