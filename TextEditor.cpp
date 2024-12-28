@@ -370,7 +370,7 @@ void TextEditor::StripTrailingWhitespaces()
 		// look for first non-whitespace at the end of the line
 		while (Move(i, cindex, true, true))
 		{
-			if (isspace(mLines[i][cindex].mChar))
+			if (std::isspace(mLines[i][cindex].mChar))
 				whitespace = cindex;
 			else
 				break;
@@ -524,7 +524,7 @@ void TextEditor::Render(const char* aTitle, const ImVec2& aSize, bool aBorder)
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4(GetColor(PaletteIndex::Background)));
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 
-	ImGui::BeginChild(aTitle, aSize, aBorder, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNavInputs);
+	ImGui::BeginChild(aTitle, aSize, aBorder, ImGuiWindowFlags_NoNavInputs);
 	HandleKeyboardInputs();
 	HandleMouseInputs();
 	ColorizeInternal();
@@ -1948,12 +1948,12 @@ TextEditor::Coordinates TextEditor::FindWordStart(const Coordinates& aFrom) cons
 		charIndex--;
 
 	bool initialIsWordChar = CharIsWordChar(line[charIndex].mChar);
-	bool initialIsSpace = isspace(line[charIndex].mChar);
+	bool initialIsSpace = std::isspace(line[charIndex].mChar);
 	char initialChar = line[charIndex].mChar;
 	while (Move(lineIndex, charIndex, true, true))
 	{
 		bool isWordChar = CharIsWordChar(line[charIndex].mChar);
-		bool isSpace = isspace(line[charIndex].mChar);
+		bool isSpace = std::isspace(line[charIndex].mChar);
 		if ((initialIsSpace && !isSpace) ||
 			(initialIsWordChar && !isWordChar) ||
 			(!initialIsWordChar && !initialIsSpace && initialChar != line[charIndex].mChar))
@@ -1978,14 +1978,14 @@ TextEditor::Coordinates TextEditor::FindWordEnd(const Coordinates& aFrom) const
 		return aFrom;
 
 	bool initialIsWordChar = CharIsWordChar(line[charIndex].mChar);
-	bool initialIsSpace = isspace(line[charIndex].mChar);
+	bool initialIsSpace = std::isspace(line[charIndex].mChar);
 	char initialChar = line[charIndex].mChar;
 	while (Move(lineIndex, charIndex, false, true))
 	{
 		if (charIndex == line.size())
 			break;
 		bool isWordChar = CharIsWordChar(line[charIndex].mChar);
-		bool isSpace = isspace(line[charIndex].mChar);
+		bool isSpace = std::isspace(line[charIndex].mChar);
 		if ((initialIsSpace && !isSpace) ||
 			(initialIsWordChar && !isWordChar) ||
 			(!initialIsWordChar && !initialIsSpace && initialChar != line[charIndex].mChar))
@@ -2300,7 +2300,7 @@ ImU32 TextEditor::GetGlyphColor(const Glyph& aGlyph) const
 
 void TextEditor::HandleKeyboardInputs(bool aParentIsFocused)
 {
-	if (ImGui::IsWindowFocused() || ImGui::IsWindowFocused(ImGuiFocusedFlags_RootWindow))
+	if (ImGui::IsWindowFocused())
 	{
 		auto shift = ImGui::IsKeyDown(ImGuiMod_Shift);
 		auto ctrl = ImGui::IsKeyDown(ImGuiMod_Ctrl);
@@ -2320,89 +2320,52 @@ void TextEditor::HandleKeyboardInputs(bool aParentIsFocused)
 		io.WantCaptureKeyboard = true;
 		io.WantTextInput = true;
 
-		// cursor movements
-		if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_UpArrow))
-			MoveUp(1, shift);
-		else if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_DownArrow))
-			MoveDown(1, shift);
-		else if (isOptionalAltShift && ImGui::IsKeyPressed(ImGuiKey_LeftArrow))
-			MoveLeft(shift, alt);
-		else if (isOptionalAltShift && ImGui::IsKeyPressed(ImGuiKey_RightArrow))
-			MoveRight(shift, alt);
-		else if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_PageUp))
-			MoveUp(mVisibleLineCount - 2, shift);
-		else if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_PageDown))
-			MoveDown(mVisibleLineCount - 2, shift);
-		else if (isOptionalShiftShortcut && ImGui::IsKeyPressed(ImGuiKey_UpArrow))
-			MoveTop(shift);
-		else if (isOptionalShiftShortcut && ImGui::IsKeyPressed(ImGuiKey_Home))
-			MoveTop(shift);
-		else if (isOptionalShiftShortcut && ImGui::IsKeyPressed(ImGuiKey_DownArrow))
-			MoveBottom(shift);
-		else if (isOptionalShiftShortcut && ImGui::IsKeyPressed(ImGuiKey_End))
-			MoveBottom(shift);
-		else if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_Home))
-			MoveHome(shift);
-		else if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_End))
-			MoveEnd(shift);
-
-		// text selection
-		else if (isShortcut && ImGui::IsKeyPressed(ImGuiKey_A))
-			SelectAll();
-		else if (isShortcut && ImGui::IsKeyPressed(ImGuiKey_D))
-			AddCursorForNextOccurrence();
+		// cursor movements and selections
+		if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_UpArrow)) MoveUp(1, shift);
+		else if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_DownArrow)) MoveDown(1, shift);
+		else if (isOptionalAltShift && ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) MoveLeft(shift, alt);
+		else if (isOptionalAltShift && ImGui::IsKeyPressed(ImGuiKey_RightArrow)) MoveRight(shift, alt);
+		else if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_PageUp)) MoveUp(mVisibleLineCount - 2, shift);
+		else if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_PageDown)) MoveDown(mVisibleLineCount - 2, shift);
+		else if (isOptionalShiftShortcut && ImGui::IsKeyPressed(ImGuiKey_UpArrow)) MoveTop(shift);
+		else if (isOptionalShiftShortcut && ImGui::IsKeyPressed(ImGuiKey_Home)) MoveTop(shift);
+		else if (isOptionalShiftShortcut && ImGui::IsKeyPressed(ImGuiKey_DownArrow)) MoveBottom(shift);
+		else if (isOptionalShiftShortcut && ImGui::IsKeyPressed(ImGuiKey_End)) MoveBottom(shift);
+		else if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_Home)) MoveHome(shift);
+		else if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_End)) MoveEnd(shift);
+		else if (isShortcut && ImGui::IsKeyPressed(ImGuiKey_A)) SelectAll();
+		else if (isShortcut && ImGui::IsKeyPressed(ImGuiKey_D)) AddCursorForNextOccurrence();
 
 		// clipboard operations
-		else if (isShortcut && ImGui::IsKeyPressed(ImGuiKey_X))
-			Cut();
-		else if (isShiftOnly && ImGui::IsKeyPressed(ImGuiKey_Delete))
-			Cut();
-		else if (isShortcut && ImGui::IsKeyPressed(ImGuiKey_Insert))
-			Copy();
-		else if (isShortcut && ImGui::IsKeyPressed(ImGuiKey_C))
-			Copy();
-		else if (!mReadOnly && isShiftOnly && ImGui::IsKeyPressed(ImGuiKey_Insert))
-			Paste();
-		else if (!mReadOnly && isShortcut && ImGui::IsKeyPressed(ImGuiKey_V))
-			Paste();
-		else if (!mReadOnly && isShortcut && ImGui::IsKeyPressed(ImGuiKey_Z))
-			Undo();
-		else if (!mReadOnly && isShortcut && ImGui::IsKeyPressed(ImGuiKey_Y))
-			Redo();
-		else if (!mReadOnly && isShiftShortcut && ImGui::IsKeyPressed(ImGuiKey_Z))
-			Redo();
+		else if (isShortcut && ImGui::IsKeyPressed(ImGuiKey_X)) Cut();
+		else if (isShiftOnly && ImGui::IsKeyPressed(ImGuiKey_Delete)) Cut();
+		else if (isShortcut && ImGui::IsKeyPressed(ImGuiKey_Insert)) Copy();
+		else if (isShortcut && ImGui::IsKeyPressed(ImGuiKey_C)) Copy();
+		else if (!mReadOnly && isShiftOnly && ImGui::IsKeyPressed(ImGuiKey_Insert)) Paste();
+		else if (!mReadOnly && isShortcut && ImGui::IsKeyPressed(ImGuiKey_V)) Paste();
+		else if (!mReadOnly && isShortcut && ImGui::IsKeyPressed(ImGuiKey_Z)) Undo();
+		else if (!mReadOnly && isShortcut && ImGui::IsKeyPressed(ImGuiKey_Y)) Redo();
+		else if (!mReadOnly && isShiftShortcut && ImGui::IsKeyPressed(ImGuiKey_Z)) Redo();
 
 		// remove text
-		else if (!mReadOnly && isOptionalAlt && ImGui::IsKeyPressed(ImGuiKey_Delete))
-			Delete(alt);
-		else if (!mReadOnly && isOptionalAlt && ImGui::IsKeyPressed(ImGuiKey_Backspace))
-			Backspace(alt);
-		else if (!mReadOnly && isShiftShortcut && ImGui::IsKeyPressed(ImGuiKey_K))
-			RemoveCurrentLines();
+		else if (!mReadOnly && isOptionalAlt && ImGui::IsKeyPressed(ImGuiKey_Delete)) Delete(alt);
+		else if (!mReadOnly && isOptionalAlt && ImGui::IsKeyPressed(ImGuiKey_Backspace)) Backspace(alt);
+		else if (!mReadOnly && isShiftShortcut && ImGui::IsKeyPressed(ImGuiKey_K)) RemoveCurrentLines();
 
 			// text manipulation
-		else if (!mReadOnly && isShortcut && ImGui::IsKeyPressed(ImGuiKey_LeftBracket))
-			ChangeCurrentLinesIndentation(false);
-		else if (!mReadOnly && isShortcut && ImGui::IsKeyPressed(ImGuiKey_RightBracket))
-			ChangeCurrentLinesIndentation(true);
-		else if (!mReadOnly && isAltOnly && ImGui::IsKeyPressed(ImGuiKey_UpArrow))
-			MoveUpCurrentLines();
-		else if (!mReadOnly && isAltOnly && ImGui::IsKeyPressed(ImGuiKey_DownArrow))
-			MoveDownCurrentLines();
-		else if (!mReadOnly && isShortcut && ImGui::IsKeyPressed(ImGuiKey_Slash))
-			ToggleLineComment();
+		else if (!mReadOnly && isShortcut && ImGui::IsKeyPressed(ImGuiKey_LeftBracket)) ChangeCurrentLinesIndentation(false);
+		else if (!mReadOnly && isShortcut && ImGui::IsKeyPressed(ImGuiKey_RightBracket)) ChangeCurrentLinesIndentation(true);
+		else if (!mReadOnly && isAltOnly && ImGui::IsKeyPressed(ImGuiKey_UpArrow)) MoveUpCurrentLines();
+		else if (!mReadOnly && isAltOnly && ImGui::IsKeyPressed(ImGuiKey_DownArrow)) MoveDownCurrentLines();
+		else if (!mReadOnly && isShortcut && ImGui::IsKeyPressed(ImGuiKey_Slash)) ToggleLineComment();
 
 		// change mode
-		else if (isNoModifiers && ImGui::IsKeyPressed(ImGuiKey_Insert))
-			mOverwrite ^= true;
+		else if (isNoModifiers && ImGui::IsKeyPressed(ImGuiKey_Insert)) mOverwrite ^= true;
 
 		// handle new line
-		else if (!mReadOnly && isNoModifiers && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))
-			EnterCharacter('\n');
-		else if (!mReadOnly && isShortcut && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))
-			InsertLineBelow();
-		else if (!mReadOnly && isShiftShortcut && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)))
-			InsertLineAbove();
+		else if (!mReadOnly && isNoModifiers && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) EnterCharacter('\n');
+		else if (!mReadOnly && isShortcut && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) InsertLineBelow();
+		else if (!mReadOnly && isShiftShortcut && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) InsertLineAbove();
 
 		// handle tabs
 		else if (!mReadOnly && ImGui::IsKeyPressed(ImGuiKey_Tab))
@@ -3096,7 +3059,7 @@ void TextEditor::ColorizeInternal()
 				auto& g = line[currentIndex];
 				auto c = g.mChar;
 
-				if (c != mLanguageDefinition->mPreprocChar && !isspace(c))
+				if (c != mLanguageDefinition->mPreprocChar && !std::isspace(c))
 					firstChar = false;
 
 				if (currentIndex == GetLineMaxIndex(line) - 1 && line[line.size() - 1].mChar == '\\')

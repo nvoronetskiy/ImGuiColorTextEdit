@@ -27,6 +27,8 @@ Following is a list of differences between this fork and the one by Santiago:
 - Improved auto indent with simplified implementation.
 - Added fast API to see if editor is empty.
 - Added API to strip trailing whitespaces.
+- Added API to filter each line in editor (with full undo).
+- Added Tabs to Space (and visa versa) as examples of line filtering.
 - Code cleaned up, restructured and bug fixed.
 - In general, behavior is more like Visual Studio Code.
 
