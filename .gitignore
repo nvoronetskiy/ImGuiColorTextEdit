@@ -30,7 +30,11 @@
 *.exe
 *.out
 *.app
-TextEditor.cpp.bak
+
+# MacOS files
+.DS_Store
+
+# Editor files
+/.vscode
 *.bak
-Save/TextEditor.h
-Save/TextEditor.cpp
+Save/*
