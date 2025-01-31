@@ -4431,7 +4431,7 @@ static TextEditor::Iterator getCStyleNumber(TextEditor::Iterator start, TextEdit
 	TextEditor::Iterator i = start;
 	TextEditor::Iterator marker;
 
-
+	
 {
 	ImWchar yych;
 	unsigned int yyaccept = 0;
@@ -5438,7 +5438,7 @@ static TextEditor::Iterator getCsStyleNumber(TextEditor::Iterator start, TextEdi
 	TextEditor::Iterator i = start;
 	TextEditor::Iterator marker;
 
-
+	
 {
 	ImWchar yych;
 	unsigned int yyaccept = 0;
@@ -6049,7 +6049,7 @@ static TextEditor::Iterator getLuaStyleNumber(TextEditor::Iterator start, TextEd
 	TextEditor::Iterator i = start;
 	TextEditor::Iterator marker;
 
-
+	
 {
 	ImWchar yych;
 	yych = i < end ? *i : 0;
@@ -6365,7 +6365,7 @@ static TextEditor::Iterator getPythonStyleNumber(TextEditor::Iterator start, Tex
 	TextEditor::Iterator i = start;
 	TextEditor::Iterator marker;
 
-
+	
 {
 	ImWchar yych;
 	yych = i < end ? *i : 0;
@@ -6782,7 +6782,7 @@ static TextEditor::Iterator tokenizeJson(TextEditor::Iterator start, TextEditor:
 	TextEditor::Iterator i = start;
 	TextEditor::Iterator marker;
 
-
+	
 {
 	ImWchar yych;
 	unsigned int yyaccept = 0;
@@ -7082,7 +7082,7 @@ static TextEditor::Iterator tokenizeMarkdown(TextEditor::Iterator start, TextEdi
 	TextEditor::Iterator i = start;
 	TextEditor::Iterator marker;
 
-
+	
 {
 	ImWchar yych;
 	yych = i < end ? *i : 0;
@@ -7090,12 +7090,26 @@ static TextEditor::Iterator tokenizeMarkdown(TextEditor::Iterator start, TextEdi
 		case '!': goto yy3;
 		case '#': goto yy4;
 		case '*': goto yy6;
-		case '-': goto yy7;
-		case '[': goto yy8;
-		case '`': goto yy9;
-		case '~': goto yy10;
+		case '+': goto yy7;
+		case '-': goto yy8;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9': goto yy10;
+		case ':':
+		case '|': goto yy11;
+		case '<': goto yy12;
+		case '[': goto yy13;
+		case '`': goto yy14;
+		case '~': goto yy15;
 		default:
-			if (i >= end) goto yy35;
+			if (i >= end) goto yy37;
 			goto yy1;
 	}
 yy1:
@@ -7107,7 +7121,7 @@ yy3:
 	marker = i;
 	yych = i < end ? *i : 0;
 	switch (yych) {
-		case '[': goto yy11;
+		case '[': goto yy16;
 		default: goto yy2;
 	}
 yy4:
@@ -7121,7 +7135,7 @@ yy4:
 	}
 yy5:
 	{
-			color = TextEditor::Color::keyword;
+			color = TextEditor::Color::declaration;
 			return i;
 		}
 yy6:
@@ -7129,20 +7143,112 @@ yy6:
 	marker = i;
 	yych = i < end ? *i : 0;
 	switch (yych) {
-		case '*': goto yy13;
+		case ' ': goto yy11;
+		case '*': goto yy20;
 		default:
 			if (i >= end) goto yy2;
-			goto yy12;
+			goto yy18;
 	}
 yy7:
+	++i;
+	yych = i < end ? *i : 0;
+	switch (yych) {
+		case ' ': goto yy11;
+		default: goto yy2;
+	}
+yy8:
+	++i;
+	yych = i < end ? *i : 0;
+	switch (yych) {
+		case ' ': goto yy11;
+		default: goto yy9;
+	}
+yy9:
+	{
+			color = TextEditor::Color::punctuation;
+			return i;
+		}
+yy10:
 	++i;
 	marker = i;
 	yych = i < end ? *i : 0;
 	switch (yych) {
-		case '-': goto yy15;
+		case '.': goto yy21;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9': goto yy22;
 		default: goto yy2;
 	}
-yy8:
+yy11:
+	++i;
+	goto yy9;
+yy12:
+	++i;
+	marker = i;
+	yych = i < end ? *i : 0;
+	switch (yych) {
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+		case 'G':
+		case 'H':
+		case 'I':
+		case 'J':
+		case 'K':
+		case 'L':
+		case 'M':
+		case 'N':
+		case 'O':
+		case 'P':
+		case 'Q':
+		case 'R':
+		case 'S':
+		case 'T':
+		case 'U':
+		case 'V':
+		case 'W':
+		case 'X':
+		case 'Y':
+		case 'Z':
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f':
+		case 'g':
+		case 'h':
+		case 'i':
+		case 'j':
+		case 'k':
+		case 'l':
+		case 'm':
+		case 'n':
+		case 'o':
+		case 'p':
+		case 'q':
+		case 'r':
+		case 's':
+		case 't':
+		case 'u':
+		case 'v':
+		case 'w':
+		case 'x':
+		case 'y':
+		case 'z': goto yy23;
+		default: goto yy2;
+	}
+yy13:
 	++i;
 	marker = i;
 	yych = i < end ? *i : 0;
@@ -7151,134 +7257,157 @@ yy8:
 		goto yy16;
 	}
 	goto yy17;
-yy9:
+yy14:
 	++i;
 	marker = i;
 	yych = i < end ? *i : 0;
 	if (yych <= 0x00) {
 		if (i >= end) goto yy2;
-		goto yy19;
+		goto yy25;
 	}
-	goto yy20;
-yy10:
+	goto yy26;
+yy15:
 	++i;
 	marker = i;
 	yych = i < end ? *i : 0;
 	switch (yych) {
-		case '~': goto yy22;
+		case '~': goto yy28;
 		default: goto yy2;
-	}
-yy11:
-	++i;
-	yych = i < end ? *i : 0;
-	switch (yych) {
-		case ']': goto yy23;
-		default:
-			if (i >= end) goto yy14;
-			goto yy11;
-	}
-yy12:
-	++i;
-	yych = i < end ? *i : 0;
-	switch (yych) {
-		case '*': goto yy24;
-		default:
-			if (i >= end) goto yy14;
-			goto yy12;
-	}
-yy13:
-	++i;
-	yych = i < end ? *i : 0;
-	switch (yych) {
-		case '*': goto yy14;
-		default:
-			if (i >= end) goto yy14;
-			goto yy25;
-	}
-yy14:
-	i = marker;
-	goto yy2;
-yy15:
-	++i;
-	yych = i < end ? *i : 0;
-	switch (yych) {
-		case '-': goto yy26;
-		default: goto yy14;
 	}
 yy16:
 	++i;
 	yych = i < end ? *i : 0;
 yy17:
 	switch (yych) {
-		case ']': goto yy18;
+		case ']': goto yy24;
 		default:
-			if (i >= end) goto yy14;
+			if (i >= end) goto yy19;
 			goto yy16;
 	}
 yy18:
 	++i;
 	yych = i < end ? *i : 0;
 	switch (yych) {
-		case '(': goto yy28;
-		default: goto yy14;
+		case ' ': goto yy19;
+		case '*': goto yy29;
+		default:
+			if (i >= end) goto yy19;
+			goto yy18;
 	}
 yy19:
+	i = marker;
+	goto yy2;
+yy20:
 	++i;
 	yych = i < end ? *i : 0;
-yy20:
 	switch (yych) {
-		case '`': goto yy21;
+		case '*': goto yy19;
 		default:
-			if (i >= end) goto yy14;
-			goto yy19;
+			if (i >= end) goto yy19;
+			goto yy30;
 	}
 yy21:
 	++i;
-	{
-			color = TextEditor::Color::string;
-			return i;
-		}
+	yych = i < end ? *i : 0;
+	switch (yych) {
+		case ' ': goto yy11;
+		default: goto yy19;
+	}
 yy22:
 	++i;
 	yych = i < end ? *i : 0;
 	switch (yych) {
-		case '~': goto yy14;
-		default:
-			if (i >= end) goto yy14;
-			goto yy29;
+		case '.': goto yy21;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9': goto yy22;
+		default: goto yy19;
 	}
 yy23:
 	++i;
 	yych = i < end ? *i : 0;
 	switch (yych) {
-		case '(': goto yy30;
-		default: goto yy14;
+		case '>': goto yy31;
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+		case 'G':
+		case 'H':
+		case 'I':
+		case 'J':
+		case 'K':
+		case 'L':
+		case 'M':
+		case 'N':
+		case 'O':
+		case 'P':
+		case 'Q':
+		case 'R':
+		case 'S':
+		case 'T':
+		case 'U':
+		case 'V':
+		case 'W':
+		case 'X':
+		case 'Y':
+		case 'Z':
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f':
+		case 'g':
+		case 'h':
+		case 'i':
+		case 'j':
+		case 'k':
+		case 'l':
+		case 'm':
+		case 'n':
+		case 'o':
+		case 'p':
+		case 'q':
+		case 'r':
+		case 's':
+		case 't':
+		case 'u':
+		case 'v':
+		case 'w':
+		case 'x':
+		case 'y':
+		case 'z': goto yy23;
+		default: goto yy19;
 	}
 yy24:
 	++i;
-	{
-			color = TextEditor::Color::declaration;
-			return i;
-		}
+	yych = i < end ? *i : 0;
+	switch (yych) {
+		case '(': goto yy32;
+		default: goto yy19;
+	}
 yy25:
 	++i;
 	yych = i < end ? *i : 0;
+yy26:
 	switch (yych) {
-		case '*': goto yy31;
+		case '`': goto yy27;
 		default:
-			if (i >= end) goto yy14;
+			if (i >= end) goto yy19;
 			goto yy25;
 	}
-yy26:
-	++i;
-	yych = i < end ? *i : 0;
-	switch (yych) {
-		case '\n': goto yy27;
-		default:
-			if (i >= end) goto yy27;
-			goto yy26;
-	}
 yy27:
+	++i;
 	{
 			color = TextEditor::Color::string;
 			return i;
@@ -7287,56 +7416,71 @@ yy28:
 	++i;
 	yych = i < end ? *i : 0;
 	switch (yych) {
-		case ')': goto yy32;
+		case '~': goto yy19;
 		default:
-			if (i >= end) goto yy14;
-			goto yy28;
+			if (i >= end) goto yy19;
+			goto yy33;
 	}
 yy29:
 	++i;
-	yych = i < end ? *i : 0;
-	switch (yych) {
-		case '~': goto yy33;
-		default:
-			if (i >= end) goto yy14;
-			goto yy29;
-	}
+	{
+			color = TextEditor::Color::number;
+			return i;
+		}
 yy30:
 	++i;
 	yych = i < end ? *i : 0;
 	switch (yych) {
-		case ')': goto yy34;
+		case '*': goto yy34;
 		default:
-			if (i >= end) goto yy14;
+			if (i >= end) goto yy19;
 			goto yy30;
 	}
 yy31:
 	++i;
-	yych = i < end ? *i : 0;
-	switch (yych) {
-		case '*': goto yy24;
-		default: goto yy14;
-	}
-yy32:
-	++i;
 	{
-			color = TextEditor::Color::knownIdentifier;
+			color = TextEditor::Color::keyword;
 			return i;
 		}
+yy32:
+	++i;
+	yych = i < end ? *i : 0;
+	switch (yych) {
+		case ')': goto yy35;
+		default:
+			if (i >= end) goto yy19;
+			goto yy32;
+	}
 yy33:
 	++i;
 	yych = i < end ? *i : 0;
 	switch (yych) {
-		case '~': goto yy24;
-		default: goto yy14;
+		case '~': goto yy36;
+		default:
+			if (i >= end) goto yy19;
+			goto yy33;
 	}
 yy34:
+	++i;
+	yych = i < end ? *i : 0;
+	switch (yych) {
+		case '*': goto yy29;
+		default: goto yy19;
+	}
+yy35:
 	++i;
 	{
 			color = TextEditor::Color::identifier;
 			return i;
 		}
-yy35:
+yy36:
+	++i;
+	yych = i < end ? *i : 0;
+	switch (yych) {
+		case '~': goto yy29;
+		default: goto yy19;
+	}
+yy37:
 	{ return start; }
 }
 
@@ -7353,9 +7497,8 @@ const TextEditor::Language& TextEditor::Language::Markdown() {
 
 	if (!initialized) {
 		language.name = "Markdown";
-		language.singleLineComment = ">";
-		language.commentStart = "```";
-		language.commentEnd = "```";
+		language.commentStart = "<!--";
+		language.commentEnd = "-->";
 
 		language.customTokenizer = tokenizeMarkdown;
 		initialized = true;
