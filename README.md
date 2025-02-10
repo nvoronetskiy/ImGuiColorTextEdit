@@ -42,7 +42,7 @@ public API to externally implement these features is however included.
 
 - Works on MacOS, Linux and Windows.
 - Has Look and feel similar to Visual Studio Code.
-- Works with latest Dear ImGui version (currently v1.91.7) and does not use deprecated functions.
+- Works with latest Dear ImGui version (currently v1.91.8) and does not use deprecated functions.
 - Supports UTF-8 encoding with 16/32 bit codepoints (based on Dear ImGui configuration, see below).
 - Is C++17 based (not unreasonable in 2025 I think) although Dear ImGui still uses C++11.
 - Has no runtime dependencies other than Dear ImGui and the C++17 Standard Template Library (STL).
@@ -252,8 +252,11 @@ In addition to being the public interface, the TextEditor class also is responsi
 for synchronizing the state of the lower levels of the architecture. When for
 instance the user pastes some text, TextEditor ensures that the Document gets
 updated, Cursors get adjusted (if required), Transaction records are created (so
-this paste operation can be undone and redone) and the Colorizer/Braketeer are
+this paste operation can be undone and redone) and the Colorizer/Bracketeer are
 informed of the changes.
+
+The final responsibility of the TextEditor class is rendering and user input
+(keyboard and mouse) processing.
 
 ## Issues
 
