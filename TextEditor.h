@@ -97,6 +97,10 @@ public:
 	};
 
 	void ScrollToLine(int line, Scroll alignment);
+	inline int getFirstVisibleLine() const { return firstVisibleLine; }
+	inline int getLastVisibleLine() const { return lastVisibleLine; }
+	inline int getFirstVisibleColumn() const { return firstVisibleColumn; }
+	inline int getLastVisibleColumn() const { return lastVisibleColumn; }
 
 	// find/replace support
 	inline void SelectFirstOccurrenceOf(const std::string& text, bool caseSensitive=true, bool wholeWord=false) { selectFirstOccurrenceOf(text, caseSensitive, wholeWord); }
