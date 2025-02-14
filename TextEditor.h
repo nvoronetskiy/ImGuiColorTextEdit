@@ -89,6 +89,15 @@ public:
 	inline bool CurrentCursorHasSelection() const { return cursors.currentCursorHasSelection(); }
 	inline void ClearCursors() { cursors.clearAll(); }
 
+	// scrolling support
+	enum class Scroll {
+		alignTop,
+		alignMiddle,
+		alignBottom
+	};
+
+	void ScrollToLine(int line, Scroll alignment);
+
 	// find/replace support
 	inline void SelectFirstOccurrenceOf(const std::string& text, bool caseSensitive=true, bool wholeWord=false) { selectFirstOccurrenceOf(text, caseSensitive, wholeWord); }
 	inline void SelectNextOccurrenceOf(const std::string& text, bool caseSensitive=true, bool wholeWord=false) { selectNextOccurrenceOf(text, caseSensitive, wholeWord); }
@@ -741,6 +750,8 @@ private:
 	int lastVisibleColumn;
 	float cursorAnimationTimer = 0.0f;
 	bool ensureCursorIsVisible = false;
+	int scrollToLine = -1;
+	Scroll scrollToAlignment = Scroll::alignMiddle;
 	bool showMatchingBracketsChanged = false;
 	bool languageChanged = false;
 	std::vector<std::string> errorMarkers;

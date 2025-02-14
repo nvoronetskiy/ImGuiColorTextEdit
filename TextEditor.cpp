@@ -99,7 +99,7 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 		auto cursor = cursors.getCurrent().getInteractiveEnd();
 
 		if (cursor.line <= firstVisibleLine) {
-			float targetScroll = std::max(0.0f, (cursor.line - 0.5f) * glyphSize.y);
+			float targetScroll = std::max(0.0f, (cursor.line - 1.5f) * glyphSize.y);
 
 			if (targetScroll < ImGui::GetScrollY()) {
 				ImGui::SetScrollY(targetScroll);
@@ -131,18 +131,37 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 		ensureCursorIsVisible = false;
 	}
 
+	// scroll to specified line (if required)
+	if (scrollToLine >= 0) {
+		switch (scrollToAlignment) {
+			case Scroll::alignTop:
+				ImGui::SetScrollY(std::max(0.0f, static_cast<float>(scrollToLine) * glyphSize.y));
+				break;
+
+			case Scroll::alignMiddle:
+				ImGui::SetScrollY(std::max(0.0f, static_cast<float>(scrollToLine - (lastVisibleLine - firstVisibleLine) / 2) * glyphSize.y));
+				break;
+
+			case Scroll::alignBottom:
+				ImGui::SetScrollY(std::max(0.0f, static_cast<float>(scrollToLine - (lastVisibleLine - firstVisibleLine - 1)) * glyphSize.y));
+				break;
+		}
+
+		scrollToLine = -1;
+	}
+
 	// determine view parameters
 	float scrollbarSize = ImGui::GetStyle().ScrollbarSize;
 	visibleHeight = ImGui::GetWindowHeight() - ((longestLine >= visibleColumns) ? scrollbarSize : 0.0f);
 	visibleLines = std::max(static_cast<int>(std::ceil(visibleHeight / glyphSize.y)), 0);
 	firstVisibleLine = std::max(static_cast<int>(std::floor(ImGui::GetScrollY() / glyphSize.y)), 0);
-	lastVisibleLine = std::min(static_cast<int>(std::ceil((ImGui::GetScrollY() + visibleHeight) / glyphSize.y)), document.lines() - 1);
+	lastVisibleLine = std::min(static_cast<int>(std::floor((ImGui::GetScrollY() + visibleHeight) / glyphSize.y)), document.lines() - 1);
 
 	auto tabSize = document.getTabSize();
 	visibleWidth = ImGui::GetWindowWidth() - textStart - ((document.lines() >= visibleLines) ? scrollbarSize : 0.0f);
 	visibleColumns = std::max(static_cast<int>(std::ceil(visibleWidth / glyphSize.x)), 0);
 	firstVisibleColumn = (std::max(static_cast<int>(std::floor(ImGui::GetScrollX() / glyphSize.x)), 0) / tabSize) * tabSize;
-	lastVisibleColumn = ((static_cast<int>(std::ceil((ImGui::GetScrollX() + visibleWidth) / glyphSize.x)) + 1) / tabSize) * tabSize;
+	lastVisibleColumn = static_cast<int>(std::floor((ImGui::GetScrollX() + visibleWidth) / glyphSize.x));
 
 	// render editor parts
 	renderSelections();
@@ -1704,6 +1723,16 @@ void TextEditor::deleteText(std::shared_ptr<Transaction> transaction, Coordinate
 	auto text = document.getSectionText(start, end);
 	document.deleteText(start, end);
 	transaction->addDelete(start, end, text);
+}
+
+
+//
+//	TextEditor::ScrollToLine
+//
+
+void TextEditor::ScrollToLine(int line, Scroll alignment) {
+	scrollToLine = line;
+	scrollToAlignment = alignment;
 }
 
 
