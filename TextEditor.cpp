@@ -728,6 +728,7 @@ void TextEditor::paste() {
 void TextEditor::undo() {
 	if (transactions.canUndo()) {
 		transactions.undo(document, cursors);
+		ensureCursorIsVisible = true;
 	}
 }
 
@@ -739,6 +740,7 @@ void TextEditor::undo() {
 void TextEditor::redo() {
 	if (transactions.canRedo()) {
 		transactions.redo(document, cursors);
+		ensureCursorIsVisible = true;
 	}
 }
 
@@ -1709,6 +1711,7 @@ TextEditor::Coordinate TextEditor::insertText(std::shared_ptr<Transaction> trans
 	// this function does not touch the cursors
 	auto end = document.insertText(start, text);
 	transaction->addInsert(start, end, text);
+	ensureCursorIsVisible = true;
 	return end;
 }
 
@@ -1722,6 +1725,7 @@ void TextEditor::deleteText(std::shared_ptr<Transaction> transaction, Coordinate
 	// this function does not touch the cursors
 	auto text = document.getSectionText(start, end);
 	document.deleteText(start, end);
+	ensureCursorIsVisible = true;
 	transaction->addDelete(start, end, text);
 }
 
