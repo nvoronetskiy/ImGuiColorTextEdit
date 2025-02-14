@@ -201,7 +201,7 @@ void TextEditor::renderErrorMarkers() {
 		for (int line = firstVisibleLine; line <= lastVisibleLine; line++) {
 			if (document[line].errorMarker) {
 				auto left = cursorScreenPos.x + textStart;
-				auto right = left + document.maxColumn(line) * glyphSize.x;
+				auto right = left + lastVisibleColumn * glyphSize.x;
 				auto y = cursorScreenPos.y + line * glyphSize.y;
 				auto start = ImVec2(left, y);
 				auto end = ImVec2(right, y + glyphSize.y);
