@@ -780,7 +780,6 @@ private:
 	float lineNumberRightOffset;
 	float decorationOffset;
 	float textOffset;
-	int longestLine;
 	float visibleHeight;
 	int visibleLines;
 	int firstVisibleLine;

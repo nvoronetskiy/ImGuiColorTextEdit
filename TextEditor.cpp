@@ -3150,7 +3150,7 @@ TextEditor::Bracketeer::iterator TextEditor::Bracketeer::getActive(Coordinate lo
 		active = end();
 		bool done = false;
 
-		for (auto i = begin(); i < end(); i++) {
+		for (auto i = begin(); !done && i < end(); i++) {
 			// skip pairs that start after specified location
 			if (i->isAfter(location)) {
 				done = true;
@@ -6446,7 +6446,7 @@ const TextEditor::Language& TextEditor::Language::Lua() {
 
 		for (auto& keyword : keywords) { language.keywords.insert(keyword); }
 
-		language.isPunctuation = isCStylePunctuation;
+		language.isPunctuation = isLuaStylePunctuation;
 		language.getIdentifier = getCStyleIdentifier;
 		language.getNumber = getLuaStyleNumber;
 		initialized = true;
