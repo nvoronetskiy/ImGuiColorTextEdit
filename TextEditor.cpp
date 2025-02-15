@@ -184,6 +184,16 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 	renderLineNumbers();
 	renderDecorations();
 
+	if (ImGui::BeginPopup("LineNumberContextMenu")) {
+		lineNumberContextMenuCallback(contextMenuLine);
+		ImGui::EndPopup();
+	}
+
+	if (ImGui::BeginPopup("TextContextMenu")) {
+		textContextMenuCallback(contextMenuLine, contextMenuColumn);
+		ImGui::EndPopup();
+	}
+
 	ImGui::EndChild();
 	ImGui::PopStyleVar();
 	ImGui::PopStyleColor();
@@ -586,7 +596,8 @@ void TextEditor::handleMouseInteractions() {
 	} else if (ImGui::IsWindowHovered()) {
 		auto io = ImGui::GetIO();
 		ImVec2 mousePos = ImGui::GetMousePos() - ImGui::GetCursorScreenPos();
-		bool overLineNumbers = showLineNumbers && (mousePos.x - ImGui::GetScrollX() > lineNumberRightOffset && mousePos.x - ImGui::GetScrollX() < lineNumberRightOffset);
+		ImVec2 absoluteMousePos = ImGui::GetMousePos() - ImGui::GetWindowPos();
+		bool overLineNumbers = showLineNumbers && absoluteMousePos.x > lineNumberLeftOffset && absoluteMousePos.x < lineNumberRightOffset;
 		bool overText = mousePos.x - ImGui::GetScrollX() > textOffset;
 
 		auto mouseCoord = document.normalizeCoordinate(Coordinate(
@@ -613,6 +624,18 @@ void TextEditor::handleMouseInteractions() {
 			}
 
 			ensureCursorIsVisible = true;
+
+		} else if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+			// handle right clicks by setting up context menu (if required)
+			if (overLineNumbers && lineNumberContextMenuCallback) {
+				contextMenuLine = mouseCoord.line;
+				ImGui::OpenPopup("LineNumberContextMenu");
+
+			} else if (overText && textContextMenuCallback) {
+				contextMenuLine = mouseCoord.line;
+				contextMenuColumn = mouseCoord.column;
+				ImGui::OpenPopup("TextContextMenu");
+			}
 
 		} else {
 			// handle left mouse button actions
@@ -651,8 +674,8 @@ void TextEditor::handleMouseInteractions() {
 				auto addCursor = ImGui::IsKeyDown(ImGuiMod_Ctrl);
 #endif
 
-				// handle mouse clicks over line numbers
 				if (overLineNumbers) {
+					// handle line number clicks
 					auto start = Coordinate(mouseCoord.line, 0);
 					auto end = document.getDown(start);
 
@@ -667,8 +690,10 @@ void TextEditor::handleMouseInteractions() {
 						cursors.setCursor(start, end);
 					}
 
-				// handle mouse clicks over text
+					ensureCursorIsVisible = true;
+
 				} else if (overText) {
+					// handle mouse clicks in text
 					if (extendCursor) {
 						cursors.updateCurrentCursor(mouseCoord);
 

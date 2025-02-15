@@ -136,7 +136,17 @@ public:
 	}
 
 	inline void ClearLineDecorator() { SetLineDecorator(0.0f, nullptr); }
-	inline bool HasLineDecorator() const { return decoratorWidth > 0.0f && decoratorCallback; }
+	inline bool HasLineDecorator() const { return decoratorWidth > 0.0f && decoratorCallback != nullptr; }
+
+	// setup context menu callbacks (these are called when a user right clicks line numbers or somewhere in the text)
+	// the editor sets up the popup menus, the callback has to populate them
+	inline void SetLineNumberContextMenuCallback(std::function<void(int line)> callback) { lineNumberContextMenuCallback = callback; }
+	inline void ClearLineNumberContextMenuCallback() { SetLineNumberContextMenuCallback(nullptr); }
+	inline bool HasLineNumberContextMenuCallback() const { return lineNumberContextMenuCallback != nullptr; }
+
+	inline void SetTextContextMenuCallback(std::function<void(int line, int column)> callback) { textContextMenuCallback = callback; }
+	inline void ClearTextContextMenuCallback() { SetTextContextMenuCallback(nullptr); }
+	inline bool HasTextContextMenuCallback() const { return textContextMenuCallback != nullptr; }
 
 	// useful functions to work on selections
 	inline void IndentLines() { if (!readOnly) indentLines(); }
@@ -812,8 +822,14 @@ private:
 	Scroll scrollToAlignment = Scroll::alignMiddle;
 	bool showMatchingBracketsChanged = false;
 	bool languageChanged = false;
+
 	float decoratorWidth = 0.0f;
 	std::function<void(Decorator&)> decoratorCallback;
+
+	std::function<void(int line)> lineNumberContextMenuCallback;
+	std::function<void(int line, int column)> textContextMenuCallback;
+	int contextMenuLine = 0;
+	int contextMenuColumn = 0;
 
 	static constexpr int leftMargin = 1; // margins are expressed in glyphs
 	static constexpr int decorationMargin = 1;

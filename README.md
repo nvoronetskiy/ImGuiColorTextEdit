@@ -49,7 +49,9 @@ public API to externally implement these features is however included.
 - Has full undo/redo capabilities and supports native clipboard with UTF-8 encoded strings.
 - Extendable syntax highlighting for multiple languages and API for custom languages.
 - Customizable color palettes (a dark and light version that work with Dear ImGui defaults are included).
-- Markers: the user can specify lines and/or line numbers to highlight and optional show tooltips (see [example](docs/markers.md)).
+- Has Marker API to specify lines and/or line numbers to highlight and optional show tooltips (see [example](docs/markers.md)).
+- Has API to decorate each line (useful for debuggers and IDEs) (see [example](docs/lineDecorator.md)).
+- Provides optional and customizable line number or text right click context menus  (see [example](docs/contextMenus.md))
 - Provides auto completion for paired glyphs (\[, \{, \(, \", \') (can be turned on and off).
 - If auto complete is turned on, accidentally typed closing glyphs are ignored.
 - If auto complete is turned on, selections can be surrounded by paired glyphs.
@@ -64,7 +66,6 @@ public API to externally implement these features is however included.
 - API to filter each line in editor (with full undo support).
 - Tabs to Space (and visa versa) as examples of line filtering.
 - API to strip trailing whitespaces.
-- API to decorate each line (useful for debuggers and IDEs) (see [example](docs/lineDecorator.md)).
 - Whitespace indicators for tabs and spaces (can be turned on and off).
 - No longer uses regular expressions for colorizing text (see below).
 
