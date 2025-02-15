@@ -47,24 +47,24 @@ public API to externally implement these features is however included.
 - Is C++17 based (not unreasonable in 2025 I think) although Dear ImGui still uses C++11.
 - Has no runtime dependencies other than Dear ImGui and the C++17 Standard Template Library (STL).
 - Has full undo/redo capabilities and supports native clipboard with UTF-8 encoded strings.
-- Extensible syntax highlighting for multiple languages and API for custom languages.
+- Extendable syntax highlighting for multiple languages and API for custom languages.
 - Customizable color palettes (a dark and light version that work with Dear ImGui defaults are included).
-- Error markers: the user can specify errors and the editor will highlight the lines and show tooltips.
+- Markers: the user can specify lines and/or line numbers to highlight and optional show tooltips (see [example](docs/markers.md)).
 - Provides auto completion for paired glyphs (\[, \{, \(, \", \') (can be turned on and off).
 - If auto complete is turned on, accidentally typed closing glyphs are ignored.
 - If auto complete is turned on, selections can be surrounded by paired glyphs.
 - Supports blinking cursor (can be turned on/off using ImGui's global io.ConfigInputTextCursorBlink flag).
 - Allows bracket matching and coloring (similar to Visual Studio Code) to be turned on and off.
 - Supports multiple cursors and multiple selections.
-- Enhanced API to support external find/replace functionality.
+- API to support external find/replace functionality.
 - Search also has the option to search for whole words.
-- Improved auto indent with simplified implementation (can be turned on and off).
-- Added API to filter selections (with full undo support).
-- Added uppercase/lowercase filter as example of selection filtering.
-- Added API to filter each line in editor (with full undo support).
-- Added Tabs to Space (and visa versa) as examples of line filtering.
-- Added API to strip trailing whitespaces.
-- Added API to decorate each line (useful for debuggers and IDEs) (see [example](docs/lineDecorator.md)).
+- Auto indent with simplified implementation (can be turned on and off).
+- API to filter selections (with full undo support).
+- Uppercase/lowercase filter as example of selection filtering.
+- API to filter each line in editor (with full undo support).
+- Tabs to Space (and visa versa) as examples of line filtering.
+- API to strip trailing whitespaces.
+- API to decorate each line (useful for debuggers and IDEs) (see [example](docs/lineDecorator.md)).
 - Whitespace indicators for tabs and spaces (can be turned on and off).
 - No longer uses regular expressions for colorizing text (see below).
 

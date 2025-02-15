@@ -118,10 +118,10 @@ public:
 	inline void ReplaceTextInCurrentCursor(const std::string& text) { if (!readOnly) replaceTextInCurrentCursor(text); }
 	inline void ReplaceTextInAllCursors(const std::string& text) { if (!readOnly) replaceTextInAllCursors(text); }
 
-	// access error markers (line numbers are zero-based)
-	void AddErrorMarker(int line, const std::string& marker);
-	void ClearErrorMarkers();
-	inline bool HasErrorMarkers() const { return errorMarkers.size() != 0; }
+	// access markers (line numbers are zero-based)
+	inline void AddMarker(int line, ImU32 lineNumberColor, ImU32 textColor, const std::string& lineNumberTooltip, const std::string& textTooltip) { addMarker(line, lineNumberColor, textColor, lineNumberTooltip, textTooltip); }
+	inline void ClearMarkers() { clearMarkers(); }
+	inline bool HasMarkers() const { return markers.size() != 0; }
 
 	// line-based decoration
 	struct Decorator {
@@ -172,7 +172,6 @@ public:
 		background,
 		cursor,
 		selection,
-		errorMarker,
 		whitespace,
 		matchingBracketBackground,
 		matchingBracketActive,
@@ -296,6 +295,7 @@ private:
 	//
 	// below is the private API
 	// private members (function and variables) start with a lowercase character
+	// private class names start with a lowercase character
 	//
 
 	class Coordinate {
@@ -436,6 +436,20 @@ private:
 		size_t current = 0;
 	} cursors;
 
+	// the list of text markers
+	class Marker {
+	public:
+		Marker(ImU32 lc, ImU32 tc, const std::string& lt, const std::string& tt) :
+			lineNumberColor(lc), textColor(tc), lineNumberTooltip(lt), textTooltip(tt) {}
+
+		ImU32 lineNumberColor;
+		ImU32 textColor;
+		std::string lineNumberTooltip;
+		std::string textTooltip;
+	};
+
+	std::vector<Marker> markers;
+
 	// a single colored character (a glyph)
 	class Glyph {
 	public:
@@ -468,8 +482,8 @@ private:
 		// state at start of line
 		State state = State::inText;
 
-		// error marker
-		size_t errorMarker;
+		// marker
+		size_t marker;
 
 		// do we need to (re)colorize this line
 		bool colorize = true;
@@ -672,7 +686,7 @@ private:
 	// render (parts of) the text editor
 	void render(const char* title, const ImVec2& size, bool border);
 	void renderSelections();
-	void renderErrorMarkers();
+	void renderMarkers();
 	void renderMatchingBrackets();
 	void renderText();
 	void renderCursors();
@@ -711,6 +725,10 @@ private:
 
 	void replaceTextInCurrentCursor(const std::string& text);
 	void replaceTextInAllCursors(const std::string& text);
+
+	// marker support
+	void addMarker(int line, ImU32 lineNumberColor, ImU32 textColor, const std::string& lineNumberTooltip, const std::string& textTooltip);
+	void clearMarkers();
 
 	// cursor/selection functions
 	void moveUp(int lines, bool select);
@@ -794,7 +812,6 @@ private:
 	Scroll scrollToAlignment = Scroll::alignMiddle;
 	bool showMatchingBracketsChanged = false;
 	bool languageChanged = false;
-	std::vector<std::string> errorMarkers;
 	float decoratorWidth = 0.0f;
 	std::function<void(Decorator&)> decoratorCallback;
 

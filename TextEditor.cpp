@@ -21,31 +21,6 @@
 
 
 //
-//	TextEditor::AddErrorMarker
-//
-
-void TextEditor::AddErrorMarker(int line, const std::string &marker) {
-	if (line >= 0 && line < document.lines()) {
-		errorMarkers.emplace_back(marker);
-		document[line].errorMarker = errorMarkers.size();
-	}
-}
-
-
-//
-//	TextEditor::ClearErrorMarkers
-//
-
-void TextEditor::ClearErrorMarkers() {
-	for (auto& line : document) {
-		line.errorMarker = 0;
-	}
-
-	errorMarkers.clear();
-}
-
-
-//
 //	TextEditor::setText
 //
 
@@ -201,7 +176,7 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 
 	// render editor parts
 	renderSelections();
-	renderErrorMarkers();
+	renderMarkers();
 	renderMatchingBrackets();
 	renderText();
 	renderCursors();
@@ -247,29 +222,49 @@ void TextEditor::renderSelections() {
 
 
 //
-//	TextEditor::renderErrorMarkers
+//	TextEditor::renderMarkers
 //
 
-void TextEditor::renderErrorMarkers() {
-	if (errorMarkers.size()) {
+void TextEditor::renderMarkers() {
+	if (markers.size()) {
 		auto drawList = ImGui::GetWindowDrawList();
 		ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
 
 		for (int line = firstVisibleLine; line <= lastVisibleLine; line++) {
-			if (document[line].errorMarker) {
-				auto left = cursorScreenPos.x + textOffset;
-				auto right = left + lastVisibleColumn * glyphSize.x;
+			if (document[line].marker) {
+				auto& marker = markers[document[line].marker - 1];
 				auto y = cursorScreenPos.y + line * glyphSize.y;
-				auto start = ImVec2(left, y);
-				auto end = ImVec2(right, y + glyphSize.y);
-				drawList->AddRectFilled(start, end, palette.get(Color::errorMarker));
 
-				if (ImGui::IsMouseHoveringRect(start, end)) {
-					ImGui::PushStyleColor(ImGuiCol_PopupBg, palette.get(Color::errorMarker));
-					ImGui::BeginTooltip();
-					ImGui::TextUnformatted(errorMarkers[document[line].errorMarker - 1].c_str());
-					ImGui::EndTooltip();
-					ImGui::PopStyleColor();
+				if (((marker.lineNumberColor >> IM_COL32_A_SHIFT) & 0xFF) != 0) {
+					auto left = cursorScreenPos.x + lineNumberLeftOffset;
+					auto right = cursorScreenPos.x + lineNumberRightOffset;
+					auto start = ImVec2(left, y);
+					auto end = ImVec2(right, y + glyphSize.y);
+					drawList->AddRectFilled(start, end, marker.lineNumberColor);
+
+					if (marker.lineNumberTooltip.size() && ImGui::IsMouseHoveringRect(start, end)) {
+						ImGui::PushStyleColor(ImGuiCol_PopupBg, marker.lineNumberColor);
+						ImGui::BeginTooltip();
+						ImGui::TextUnformatted(marker.lineNumberTooltip.c_str());
+						ImGui::EndTooltip();
+						ImGui::PopStyleColor();
+					}
+				}
+
+				if (((marker.textColor >> IM_COL32_A_SHIFT) & 0xFF) != 0) {
+					auto left = cursorScreenPos.x + textOffset;
+					auto right = left + lastVisibleColumn * glyphSize.x;
+					auto start = ImVec2(left, y);
+					auto end = ImVec2(right, y + glyphSize.y);
+					drawList->AddRectFilled(start, end, marker.textColor);
+
+					if (marker.textTooltip.size() && ImGui::IsMouseHoveringRect(start, end)) {
+						ImGui::PushStyleColor(ImGuiCol_PopupBg, marker.textColor);
+						ImGui::BeginTooltip();
+						ImGui::TextUnformatted(marker.textTooltip.c_str());
+						ImGui::EndTooltip();
+						ImGui::PopStyleColor();
+					}
 				}
 			}
 		}
@@ -954,6 +949,31 @@ void TextEditor::replaceTextInAllCursors(const std::string& text) {
 	auto transaction = startTransaction();
 	insertTextIntoAllCursors(transaction, text);
 	endTransaction(transaction);
+}
+
+
+//
+//	TextEditor::addMarker
+//
+
+void TextEditor::addMarker(int line, ImU32 lineNumberColor, ImU32 textColor, const std::string& lineNumberTooltip, const std::string& textTooltip) {
+	if (line >= 0 && line < document.lines()) {
+		markers.emplace_back(lineNumberColor, textColor, lineNumberTooltip, textTooltip);
+		document[line].marker = markers.size();
+	}
+}
+
+
+//
+//	TextEditor::clearMarkers
+//
+
+void TextEditor::clearMarkers() {
+	for (auto& line : document) {
+		line.marker = 0;
+	}
+
+	markers.clear();
 }
 
 
@@ -1851,7 +1871,6 @@ const TextEditor::Palette& TextEditor::GetDarkPalette() {
 		IM_COL32( 30,  30,  30, 255),	// background
 		IM_COL32(224, 224, 224, 255),	// cursor
 		IM_COL32( 32,  96, 160, 255),	// selection
-		IM_COL32(128,   0,  32, 255),	// errorMarker
 		IM_COL32( 80,  80,  80, 255),	// whitespace
 		IM_COL32( 70,  70,  70, 255),	// matchingBracketBackground
 		IM_COL32(140, 140, 140, 255),	// matchingBracketActive
@@ -1882,7 +1901,6 @@ const TextEditor::Palette& TextEditor::GetLightPalette()
 		IM_COL32(255, 255, 255, 255),	// background
 		IM_COL32(  0,   0,   0, 255),	// cursor
 		IM_COL32(  0,   0,  96,  64),	// selection
-		IM_COL32(255,  16,   0, 160),	// errorMarker
 		IM_COL32(144, 144, 144, 144),	// whitespace
 		IM_COL32(180, 180, 180, 144),	// matchingBracketBackground
 		IM_COL32( 72,  72,  72, 255),	// matchingBracketActive
