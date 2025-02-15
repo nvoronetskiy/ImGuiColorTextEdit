@@ -89,6 +89,12 @@ public:
 	inline bool CurrentCursorHasSelection() const { return cursors.currentCursorHasSelection(); }
 	inline void ClearCursors() { cursors.clearAll(); }
 
+	// get cursor positions (the meaning of main and current is explained in README.md)
+	inline size_t GetNumberOfCursors() const { return cursors.size(); }
+	inline void GetCursor(int& line, int& column, size_t cursor) const { return getCursor(line, column, cursor); }
+	inline void GetMainCursor(int& line, int& column) const { return getCursor(line, column, cursors.getMainIndex()); }
+	inline void GetCurrentCursor(int& line, int& column) const { return getCursor(line, column, cursors.getCurrentIndex()); }
+
 	// scrolling support
 	enum class Scroll {
 		alignTop,
@@ -96,11 +102,14 @@ public:
 		alignBottom
 	};
 
-	void ScrollToLine(int line, Scroll alignment);
-	inline int getFirstVisibleLine() const { return firstVisibleLine; }
-	inline int getLastVisibleLine() const { return lastVisibleLine; }
-	inline int getFirstVisibleColumn() const { return firstVisibleColumn; }
-	inline int getLastVisibleColumn() const { return lastVisibleColumn; }
+	inline void ScrollToLine(int line, Scroll alignment) { scrollToLine(line, alignment); }
+	inline int GetFirstVisibleLine() const { return firstVisibleLine; }
+	inline int GetLastVisibleLine() const { return lastVisibleLine; }
+	inline int GetFirstVisibleColumn() const { return firstVisibleColumn; }
+	inline int GetLastVisibleColumn() const { return lastVisibleColumn; }
+
+	inline int GetLineHeight() const { return glyphSize.y; }
+	inline int GetGlyphWidth() const { return glyphSize.x; }
 
 	// find/replace support
 	inline void SelectFirstOccurrenceOf(const std::string& text, bool caseSensitive=true, bool wholeWord=false) { selectFirstOccurrenceOf(text, caseSensitive, wholeWord); }
@@ -113,6 +122,21 @@ public:
 	void AddErrorMarker(int line, const std::string& marker);
 	void ClearErrorMarkers();
 	inline bool HasErrorMarkers() const { return errorMarkers.size() != 0; }
+
+	// line-based decoration
+	struct Decorator {
+		int line; // zero-based
+		float width;
+		float height;
+	};
+
+	inline void SetLineDecorator(float width, std::function<void(Decorator& decorator)> callback) {
+		decoratorWidth = width;
+		decoratorCallback = callback;
+	}
+
+	inline void ClearLineDecorator() { SetLineDecorator(0.0f, nullptr); }
+	inline bool HasLineDecorator() const { return decoratorWidth > 0.0f && decoratorCallback; }
 
 	// useful functions to work on selections
 	inline void IndentLines() { if (!readOnly) indentLines(); }
@@ -394,7 +418,9 @@ private:
 
 		// get main/current cursor
 		inline Cursor& getMain() { return at(main); }
+		inline size_t getMainIndex() const { return main; }
 		inline Cursor& getCurrent() { return at(current); }
+		inline size_t getCurrentIndex() const { return current; }
 		inline iterator getCurrentAsIterator() { return begin() + current; }
 
 		// update cursors
@@ -650,7 +676,9 @@ private:
 	void renderMatchingBrackets();
 	void renderText();
 	void renderCursors();
+	void renderMargin();
 	void renderLineNumbers();
+	void renderDecorations();
 
 	// keyboard and mouse interactions
 	void handleKeyboardInputs();
@@ -667,6 +695,12 @@ private:
 	void paste();
 	void undo();
 	void redo();
+
+	// access cursor location
+	void getCursor(int& line, int& column, size_t cursor) const;
+
+	// scrolling support
+	void scrollToLine(int line, Scroll alignment);
 
 	// find/replace support
 	void selectFirstOccurrenceOf(const std::string& text, bool caseSensitive, bool wholeWord);
@@ -742,7 +776,10 @@ private:
 	ImFont* font;
 	float fontSize;
 	ImVec2 glyphSize;
-	float textStart;
+	float lineNumberLeftOffset;
+	float lineNumberRightOffset;
+	float decorationOffset;
+	float textOffset;
 	int longestLine;
 	float visibleHeight;
 	int visibleLines;
@@ -754,14 +791,17 @@ private:
 	int lastVisibleColumn;
 	float cursorAnimationTimer = 0.0f;
 	bool ensureCursorIsVisible = false;
-	int scrollToLine = -1;
+	int scrollToLineNumber = -1;
 	Scroll scrollToAlignment = Scroll::alignMiddle;
 	bool showMatchingBracketsChanged = false;
 	bool languageChanged = false;
 	std::vector<std::string> errorMarkers;
+	float decoratorWidth = 0.0f;
+	std::function<void(Decorator&)> decoratorCallback;
 
-	static constexpr int leftMargin = 2;
-	static constexpr int lineNumberMargin = 2;
+	static constexpr int leftMargin = 1; // margins are expressed in glyphs
+	static constexpr int decorationMargin = 1;
+	static constexpr int textMargin = 2;
 	static constexpr int cursorWidth = 1;
 
 	// interaction context

@@ -21,6 +21,31 @@
 
 
 //
+//	TextEditor::AddErrorMarker
+//
+
+void TextEditor::AddErrorMarker(int line, const std::string &marker) {
+	if (line >= 0 && line < document.lines()) {
+		errorMarkers.emplace_back(marker);
+		document[line].errorMarker = errorMarkers.size();
+	}
+}
+
+
+//
+//	TextEditor::ClearErrorMarkers
+//
+
+void TextEditor::ClearErrorMarkers() {
+	for (auto& line : document) {
+		line.errorMarker = 0;
+	}
+
+	errorMarkers.clear();
+}
+
+
+//
 //	TextEditor::setText
 //
 
@@ -42,16 +67,27 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 		updatePalette();
 	}
 
-	// get font information and determine start of text
+	// get font information and determine start of line numbers, decorations and text
 	font = ImGui::GetFont();
 	fontSize = ImGui::GetFontSize();
 	glyphSize = ImVec2(font->CalcTextSizeA(fontSize, FLT_MAX, -1.0f, "#").x, ImGui::GetTextLineHeightWithSpacing() * lineSpacing);
-	textStart = leftMargin * glyphSize.x;
+	lineNumberLeftOffset = leftMargin * glyphSize.x;
 
-	// adjust text start in case line numbers are shown
 	if (showLineNumbers) {
 		int digits = static_cast<int>(std::log10(document.lines() + 1) + 1.0f);
-		textStart += glyphSize.x * (digits + lineNumberMargin);
+		lineNumberRightOffset = lineNumberLeftOffset + digits * glyphSize.x;
+		decorationOffset = lineNumberRightOffset + decorationMargin * glyphSize.x;
+
+	} else {
+		lineNumberRightOffset = lineNumberLeftOffset;
+		decorationOffset = lineNumberLeftOffset;
+	}
+
+	if (decoratorWidth > 0.0f) {
+		textOffset = decorationOffset + decoratorWidth + decorationMargin * glyphSize.x;
+
+	} else {
+		textOffset = decorationOffset + textMargin * glyphSize.x;
 	}
 
 	// set style
@@ -61,7 +97,7 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 	// start a new child window
 	// this must be done before we handle keyboard and mouse interactions to ensure correct ImGui context
 	int longestLine = document.maxColumn();
-	ImGui::SetNextWindowContentSize(ImVec2(textStart + longestLine * glyphSize.x + cursorWidth, document.lines() * glyphSize.y));
+	ImGui::SetNextWindowContentSize(ImVec2(textOffset + longestLine * glyphSize.x + cursorWidth, document.lines() * glyphSize.y));
 	ImGui::BeginChild(title, size, border, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoNavInputs);
 
 	// handle keyboard and mouse inputs
@@ -132,22 +168,22 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 	}
 
 	// scroll to specified line (if required)
-	if (scrollToLine >= 0) {
+	if (scrollToLineNumber >= 0) {
 		switch (scrollToAlignment) {
 			case Scroll::alignTop:
-				ImGui::SetScrollY(std::max(0.0f, static_cast<float>(scrollToLine) * glyphSize.y));
+				ImGui::SetScrollY(std::max(0.0f, static_cast<float>(scrollToLineNumber) * glyphSize.y));
 				break;
 
 			case Scroll::alignMiddle:
-				ImGui::SetScrollY(std::max(0.0f, static_cast<float>(scrollToLine - (lastVisibleLine - firstVisibleLine) / 2) * glyphSize.y));
+				ImGui::SetScrollY(std::max(0.0f, static_cast<float>(scrollToLineNumber - (lastVisibleLine - firstVisibleLine) / 2) * glyphSize.y));
 				break;
 
 			case Scroll::alignBottom:
-				ImGui::SetScrollY(std::max(0.0f, static_cast<float>(scrollToLine - (lastVisibleLine - firstVisibleLine - 1)) * glyphSize.y));
+				ImGui::SetScrollY(std::max(0.0f, static_cast<float>(scrollToLineNumber - (lastVisibleLine - firstVisibleLine - 1)) * glyphSize.y));
 				break;
 		}
 
-		scrollToLine = -1;
+		scrollToLineNumber = -1;
 	}
 
 	// determine view parameters
@@ -158,7 +194,7 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 	lastVisibleLine = std::min(static_cast<int>(std::floor((ImGui::GetScrollY() + visibleHeight) / glyphSize.y)), document.lines() - 1);
 
 	auto tabSize = document.getTabSize();
-	visibleWidth = ImGui::GetWindowWidth() - textStart - ((document.lines() >= visibleLines) ? scrollbarSize : 0.0f);
+	visibleWidth = ImGui::GetWindowWidth() - textOffset - ((document.lines() >= visibleLines) ? scrollbarSize : 0.0f);
 	visibleColumns = std::max(static_cast<int>(std::ceil(visibleWidth / glyphSize.x)), 0);
 	firstVisibleColumn = (std::max(static_cast<int>(std::floor(ImGui::GetScrollX() / glyphSize.x)), 0) / tabSize) * tabSize;
 	lastVisibleColumn = static_cast<int>(std::floor((ImGui::GetScrollX() + visibleWidth) / glyphSize.x));
@@ -169,7 +205,9 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 	renderMatchingBrackets();
 	renderText();
 	renderCursors();
+	renderMargin();
 	renderLineNumbers();
+	renderDecorations();
 
 	ImGui::EndChild();
 	ImGui::PopStyleVar();
@@ -196,7 +234,7 @@ void TextEditor::renderSelections() {
 				auto last = std::min(end.line, lastVisibleLine);
 
 				for (auto line = first; line <= last; line++) {
-					auto x = cursorScreenPos.x + textStart;
+					auto x = cursorScreenPos.x + textOffset;
 					auto left = x + (line == first ? start.column : 0) * glyphSize.x;
 					auto right = x + (line == last ? end.column : document.maxColumn(line)) * glyphSize.x;
 					auto y = cursorScreenPos.y + line * glyphSize.y;
@@ -219,7 +257,7 @@ void TextEditor::renderErrorMarkers() {
 
 		for (int line = firstVisibleLine; line <= lastVisibleLine; line++) {
 			if (document[line].errorMarker) {
-				auto left = cursorScreenPos.x + textStart;
+				auto left = cursorScreenPos.x + textOffset;
 				auto right = left + lastVisibleColumn * glyphSize.x;
 				auto y = cursorScreenPos.y + line * glyphSize.y;
 				auto start = ImVec2(left, y);
@@ -255,7 +293,7 @@ void TextEditor::renderMatchingBrackets() {
 					bracket.start.line <= lastVisibleLine &&
 					bracket.end.line > firstVisibleLine) {
 
-					auto lineX = cursorScreenPos.x + textStart + std::min(bracket.start.column, bracket.end.column) * glyphSize.x;
+					auto lineX = cursorScreenPos.x + textOffset + std::min(bracket.start.column, bracket.end.column) * glyphSize.x;
 					auto startY = cursorScreenPos.y + (bracket.start.line + 1) * glyphSize.y;
 					auto endY = cursorScreenPos.y + bracket.end.line * glyphSize.y;
 					drawList->AddLine(ImVec2(lineX, startY), ImVec2(lineX, endY), palette.get(Color::whitespace), 1.0f);
@@ -269,11 +307,11 @@ void TextEditor::renderMatchingBrackets() {
 				active->start.line <= lastVisibleLine &&
 				active->end.line > firstVisibleLine) {
 
-				auto x1 = cursorScreenPos.x + textStart + active->start.column * glyphSize.x;
+				auto x1 = cursorScreenPos.x + textOffset + active->start.column * glyphSize.x;
 				auto y1 = cursorScreenPos.y + active->start.line * glyphSize.y;
 				drawList->AddRectFilled(ImVec2(x1, y1), ImVec2(x1 + glyphSize.x, y1 + glyphSize.y), palette.get(Color::matchingBracketBackground));
 
-				auto x2 = cursorScreenPos.x + textStart + active->end.column * glyphSize.x;
+				auto x2 = cursorScreenPos.x + textOffset + active->end.column * glyphSize.x;
 				auto y2 = cursorScreenPos.y + active->end.line * glyphSize.y;
 				drawList->AddRectFilled(ImVec2(x2, y2), ImVec2(x2 + glyphSize.x, y2 + glyphSize.y), palette.get(Color::matchingBracketBackground));
 
@@ -294,7 +332,7 @@ void TextEditor::renderMatchingBrackets() {
 void TextEditor::renderText() {
 	auto drawList = ImGui::GetWindowDrawList();
 	ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
-	ImVec2 lineScreenPos = cursorScreenPos + ImVec2(textStart, firstVisibleLine * glyphSize.y);
+	ImVec2 lineScreenPos = cursorScreenPos + ImVec2(textOffset, firstVisibleLine * glyphSize.y);
 	auto tabSize = document.getTabSize();
 
 	for (int i = firstVisibleLine; i <= lastVisibleLine; i++) {
@@ -363,10 +401,27 @@ void TextEditor::renderCursors() {
 			auto pos = cursor.getInteractiveEnd();
 
 			if (pos.line >= firstVisibleLine && pos.line <= lastVisibleLine) {
-				auto x = cursorScreenPos.x + textStart + pos.column * glyphSize.x - 1;
+				auto x = cursorScreenPos.x + textOffset + pos.column * glyphSize.x - 1;
 				auto y = cursorScreenPos.y + pos.line * glyphSize.y;
 				drawList->AddRectFilled(ImVec2(x, y), ImVec2(x + cursorWidth, y + glyphSize.y), palette.get(Color::cursor));
 			}
+		}
+	}
+}
+
+
+//
+//	TextEditor::renderMargin
+//
+
+void TextEditor::renderMargin() {
+	if ((decoratorWidth > 0.0f && decoratorCallback) || showLineNumbers) {
+		// erase background in case we are scrolling horizontally
+		if (ImGui::GetScrollX() > 0.0f) {
+			ImGui::GetWindowDrawList()->AddRectFilled(
+				ImGui::GetWindowPos(),
+				ImGui::GetWindowPos() + ImVec2(textOffset, ImGui::GetWindowSize().y),
+				palette.get(Color::background));
 		}
 	}
 }
@@ -379,32 +434,40 @@ void TextEditor::renderCursors() {
 void TextEditor::renderLineNumbers() {
 	if (showLineNumbers) {
 		auto drawList = ImGui::GetWindowDrawList();
-		ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
-		auto lineNumberEnd = ImGui::GetWindowPos().x + textStart;
-
-		// erase background in case we are scrolling horizontally
-		if (ImGui::GetScrollX() > 0.0f) {
-			drawList->AddRectFilled(
-				ImGui::GetWindowPos(),
-				ImGui::GetWindowPos() + ImVec2(textStart,
-				ImGui::GetWindowSize().y),
-				palette.get(Color::background));
-		}
-
-		// get the line number of the last cursor
+		auto cursorScreenPos = ImGui::GetCursorScreenPos();
 		auto curserLine = cursors.getCurrent().getInteractiveEnd().line;
+		auto position = ImVec2(ImGui::GetWindowPos().x + lineNumberRightOffset, cursorScreenPos.y);
 
 		for (int i = firstVisibleLine; i <= lastVisibleLine; i++) {
-			int digits = static_cast<int>(std::log10(i + 1) + 1.0f);
-			auto lineNumberWidth = (digits + lineNumberMargin) * glyphSize.x;
-			Color foreground =  i == curserLine ? Color::currentLineNumber : Color::lineNumber;
-
-			drawList->AddText(
-				ImVec2(lineNumberEnd - lineNumberWidth,
-				cursorScreenPos.y + i * glyphSize.y),
-				palette.get(foreground),
-				std::to_string(i + 1).c_str());
+			auto width = static_cast<int>(std::log10(i + 1) + 1.0f) * glyphSize.x;
+			auto foreground = (i == curserLine) ? Color::currentLineNumber : Color::lineNumber;
+			auto number = std::to_string(i + 1);
+			drawList->AddText(position + ImVec2(-width, i * glyphSize.y), palette.get(foreground), number.c_str());
 		}
+	}
+}
+
+
+//
+//	TextEditor::renderDecorations
+//
+
+void TextEditor::renderDecorations() {
+	if (decoratorWidth > 0.0f && decoratorCallback) {
+		auto cursorScreenPos = ImGui::GetCursorScreenPos();
+		auto position = ImVec2(ImGui::GetWindowPos().x + decorationOffset, cursorScreenPos.y);
+		Decorator decorator{0, decoratorWidth, glyphSize.y};
+
+		for (int i = firstVisibleLine; i <= lastVisibleLine; i++) {
+			decorator.line = i;
+			ImGui::SetCursorScreenPos(position);
+			ImGui::PushID(i);
+			decoratorCallback(decorator);
+			ImGui::PopID();
+			position.y += glyphSize.y;
+		}
+
+		ImGui::SetCursorScreenPos(cursorScreenPos);
 	}
 }
 
@@ -528,14 +591,15 @@ void TextEditor::handleMouseInteractions() {
 	} else if (ImGui::IsWindowHovered()) {
 		auto io = ImGui::GetIO();
 		ImVec2 mousePos = ImGui::GetMousePos() - ImGui::GetCursorScreenPos();
-		bool overLineNumbers = showLineNumbers && (mousePos.x - ImGui::GetScrollX() < textStart);
+		bool overLineNumbers = showLineNumbers && (mousePos.x - ImGui::GetScrollX() > lineNumberRightOffset && mousePos.x - ImGui::GetScrollX() < lineNumberRightOffset);
+		bool overText = mousePos.x - ImGui::GetScrollX() > textOffset;
 
 		auto mouseCoord = document.normalizeCoordinate(Coordinate(
 			static_cast<int>(std::floor(mousePos.y / glyphSize.y)),
-			static_cast<int>(std::floor((mousePos.x - textStart) / glyphSize.x))));
+			static_cast<int>(std::floor((mousePos.x - textOffset) / glyphSize.x))));
 
 		// show text cursor if required
-		if (ImGui::IsWindowFocused() && !overLineNumbers) {
+		if (ImGui::IsWindowFocused() && overText) {
 			ImGui::SetMouseCursor(ImGuiMouseCursor_TextInput);
 		}
 
@@ -568,7 +632,7 @@ void TextEditor::handleMouseInteractions() {
 
 			if (tripleClick) {
 				// left mouse button triple click
-				if (!overLineNumbers) {
+				if (overText) {
 					auto start = document.getStartOfLine(mouseCoord);
 					auto end = document.getDown(start);
 					cursors.updateCurrentCursor(start, end);
@@ -576,7 +640,7 @@ void TextEditor::handleMouseInteractions() {
 
 			} else if (doubleClick) {
 				// left mouse button double click
-				if (!overLineNumbers) {
+				if (overText) {
 					auto start = document.findWordStart(mouseCoord);
 					auto end = document.findWordEnd(mouseCoord);
 					cursors.updateCurrentCursor(start, end);
@@ -609,7 +673,7 @@ void TextEditor::handleMouseInteractions() {
 					}
 
 				// handle mouse clicks over text
-				} else {
+				} else if (overText) {
 					if (extendCursor) {
 						cursors.updateCurrentCursor(mouseCoord);
 
@@ -742,6 +806,28 @@ void TextEditor::redo() {
 		transactions.redo(document, cursors);
 		ensureCursorIsVisible = true;
 	}
+}
+
+
+//
+//	TextEditor::getCursor
+//
+
+void TextEditor::getCursor(int& line, int& column, size_t cursor) const {
+	cursor = std::min(cursor, cursors.size() - 1);
+	auto pos = cursors[cursor].getInteractiveEnd();
+	line = pos.line;
+	column = pos.column;
+}
+
+
+//
+//	TextEditor::scrollToLine
+//
+
+void TextEditor::scrollToLine(int line, Scroll alignment) {
+	scrollToLineNumber = line;
+	scrollToAlignment = alignment;
 }
 
 
@@ -1727,41 +1813,6 @@ void TextEditor::deleteText(std::shared_ptr<Transaction> transaction, Coordinate
 	document.deleteText(start, end);
 	ensureCursorIsVisible = true;
 	transaction->addDelete(start, end, text);
-}
-
-
-//
-//	TextEditor::ScrollToLine
-//
-
-void TextEditor::ScrollToLine(int line, Scroll alignment) {
-	scrollToLine = line;
-	scrollToAlignment = alignment;
-}
-
-
-//
-//	TextEditor::AddErrorMarker
-//
-
-void TextEditor::AddErrorMarker(int line, const std::string &marker) {
-	if (line >= 0 && line < document.lines()) {
-		errorMarkers.emplace_back(marker);
-		document[line].errorMarker = errorMarkers.size();
-	}
-}
-
-
-//
-//	TextEditor::ClearErrorMarkers
-//
-
-void TextEditor::ClearErrorMarkers() {
-	for (auto& line : document) {
-		line.errorMarker = 0;
-	}
-
-	errorMarkers.clear();
 }
 
 
