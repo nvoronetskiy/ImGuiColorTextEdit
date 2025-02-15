@@ -596,7 +596,7 @@ void TextEditor::handleMouseInteractions() {
 
 		auto mouseCoord = document.normalizeCoordinate(Coordinate(
 			static_cast<int>(std::floor(mousePos.y / glyphSize.y)),
-			static_cast<int>(std::floor((mousePos.x - textOffset) / glyphSize.x))));
+			static_cast<int>(std::round((mousePos.x - textOffset) / glyphSize.x))));
 
 		// show text cursor if required
 		if (ImGui::IsWindowFocused() && overText) {
