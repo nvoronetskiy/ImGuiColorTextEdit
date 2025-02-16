@@ -33,39 +33,40 @@ there now is little code in common.
 
 Note: In the screenshot above, the tabs, menubar and floating find/replace window
 are not part of the text editor widget. They are part of a custom enclosing IDE
-(which is part of the larger ([ObjectTalk](https://github.com/goossens/ObjectTalk))
+(which is part of the larger [ObjectTalk](https://github.com/goossens/ObjectTalk)
 project). By not putting those things in the editor, integrators have maximum
-flexibility to wrap the editor in their context in the way they see fit. The
+flexibility to wrap the editor in their own context in the way they see fit. The
 public API to externally implement these features is however included.
 
 ## Features
 
 - Works on MacOS, Linux and Windows.
-- Has Look and feel similar to Visual Studio Code.
+- Has look and feel similar to Visual Studio Code.
 - Works with latest Dear ImGui version (currently v1.91.8) and does not use deprecated functions.
 - Supports UTF-8 encoding with 16/32 bit codepoints (based on Dear ImGui configuration, see below).
 - Is C++17 based (not unreasonable in 2025 I think) although Dear ImGui still uses C++11.
 - Has no runtime dependencies other than Dear ImGui and the C++17 Standard Template Library (STL).
 - Has full undo/redo capabilities and supports native clipboard with UTF-8 encoded strings.
-- Extensible syntax highlighting for multiple languages and API for custom languages.
+- Extendable syntax highlighting for multiple languages and API for custom languages.
 - Customizable color palettes (a dark and light version that work with Dear ImGui defaults are included).
-- Error markers: the user can specify errors and the editor will highlight the lines and show tooltips.
+- Has Marker API to specify lines and/or line numbers to highlight and optional show tooltips (see [example](docs/markers.md)).
+- Has API to decorate each line (useful for debuggers and IDEs) (see [example](docs/lineDecorator.md)).
+- Provides optional and customizable line number or text right click context menus  (see [example](docs/contextMenus.md))
 - Provides auto completion for paired glyphs (\[, \{, \(, \", \') (can be turned on and off).
 - If auto complete is turned on, accidentally typed closing glyphs are ignored.
 - If auto complete is turned on, selections can be surrounded by paired glyphs.
 - Supports blinking cursor (can be turned on/off using ImGui's global io.ConfigInputTextCursorBlink flag).
 - Allows bracket matching and coloring (similar to Visual Studio Code) to be turned on and off.
 - Supports multiple cursors and multiple selections.
-- Enhanced API to support external find/replace functionality.
+- API to support external find/replace functionality.
 - Search also has the option to search for whole words.
-- Improved auto indent with simplified implementation (can be turned on and off).
-- Added API to filter selections (with full undo support).
-- Added uppercase/lowercase filter as example of selection filtering.
-- Added API to filter each line in editor (with full undo support).
-- Added Tabs to Space (and visa versa) as examples of line filtering.
-- Added API to strip trailing whitespaces.
+- Auto indent with simplified implementation (can be turned on and off).
+- API to filter selections (with full undo support).
+- Uppercase/lowercase filter as example of selection filtering.
+- API to filter each line in editor (with full undo support).
+- Tabs to Space (and visa versa) as examples of line filtering.
+- API to strip trailing whitespaces.
 - Whitespace indicators for tabs and spaces (can be turned on and off).
-- Allows ImGuiTextEdit instantiation before ImGui context is initialized.
 - No longer uses regular expressions for colorizing text (see below).
 
 ## Integration
@@ -88,12 +89,11 @@ Dear ImGui context by doing the following:
 
 ## Default Keyboard and Mouse Mappings
 
-Note: in the mappings listed below, the following modifier keys are used:
-
-- Ctrl: this refers to the Command Key on MacOS and the Control key on Linux and Windows.
-- Alt: this refers to the Option key on MacOS and the Alt key on Linux and Windows.
-- Shift: as you would expect on all platforms.
-- If a keyboard has a left and right version of these modifiers, the meaning is not different.
+- In the mappings listed below, the following modifier keys are used:
+	- Ctrl: this refers to the Command Key on MacOS and the Control key on Linux and Windows.
+	- Alt: this refers to the Option key on MacOS and the Alt key on Linux and Windows.
+	- Shift: as you would expect on all platforms.
+	- If a keyboard has a left and right version of these modifiers, the meaning is not different.
 
 - Cursor movements:
 	- Single left mouse click moves the cursor.
@@ -138,13 +138,14 @@ Note: in the mappings listed below, the following modifier keys are used:
 	- Ctrl-/ toggles comments if language with single line comments is specified.
 
 - Other:
-	- Mouse swiping or mouse wheel movements scrolls/pans the document.
+	- Mouse wheel movements scroll/pan the document.
+	- Middle mouse button and dragging scrolls/pans the document.
 	- Insert key toggles between insert (default) and overwrite modes.
 	- Clicking or dragging over line numbers select line(s).
 
 ## Unicode and UTF-8
 
-This rewrite of TextEditor uses UTF-8 encoded strings for the public APIs
+This rewrite of TextEditor uses UTF-8 encoded strings for the public API
 and to interact with the clipboard like the original TextEditor versions.
 The original and most of its forks use UTF-8 on the private side as well
 which is effective from a storage perspective but it makes all the
@@ -166,7 +167,7 @@ and set the desired glyphs ranges, please see the
 
 ## Architecture
 
-While this editor relies on [Omar Cornut's Dear ImGui][https://github.com/ocornut/imgui],
+While this editor relies on [Omar Cornut's Dear ImGui](https://github.com/ocornut/imgui),
 it does not follow the "pure" one widget - one function approach. Since the editor
 has to maintain a relatively complex and large internal state, it did not seem
 to be practical to try and enforce fully immediate mode. It therefore stores
@@ -239,7 +240,7 @@ i. e. consider an uniform grid on the screen as it is rendered, and each cell
 has its own coordinate, starting from Tabs are counted as [1..tabsize]
 spaces, depending on how many spaces are necessary to reach the next tab stop.
 For example, coordinate (1, 5) represents the character 'B' in a line "\tABC",
-when tabsize = 4, because it is rendered as "    ABC" on the screen.
+when tabsize = 4, because it is rendered as "&nbsp;&nbsp;&nbsp;&nbsp;ABC" on the screen.
 
 #### TextEditor
 
@@ -269,7 +270,7 @@ are available. If you find any problems or want to make a suggestion for improve
 
 ## Credits
 
-Thank you [Omar Cornut][https://github.com/ocornut/imgui] for creating Dear ImGui
+Thank you [Omar Cornut](https://github.com/ocornut/imgui) for creating Dear ImGui
 in the first place. Without you, this editor would not exist.
 
 I owe a great deal of gratitude to [Balázs Jákó](https://github.com/BalazsJako/ImGuiColorTextEdit)
