@@ -1,6 +1,7 @@
 //
 //	Glsl
 //
+#include "../TextEditor.h"
 
 const TextEditor::Language& Glsl() {
 	static bool initialized = false;

@@ -31,7 +31,7 @@
 class TextEditor {
 public:
 	// constructor
-	TextEditor() { SetPalette(defaultPalette); }
+	TextEditor() { SetPalette(GetDarkPalette()); }
 
 	//
 	// Below is the public API
@@ -168,8 +168,6 @@ public:
 
 	inline void SetPalette(const Palette& palette) { paletteBase = palette; paletteAlpha = -1.0f; }
 	inline const Palette& GetPalette() const { return paletteBase; }
-	inline static void SetDefaultPalette(const Palette& aValue) { defaultPalette = aValue; }
-	inline static Palette& GetDefaultPalette() { return defaultPalette; }
 
 	static const Palette& GetDarkPalette();
 	static const Palette& GetLightPalette();
@@ -771,7 +769,6 @@ private:
 
 	// color palette support
 	void updatePalette();
-	static Palette defaultPalette;
 	Palette paletteBase;
 	Palette palette;
 	float paletteAlpha;

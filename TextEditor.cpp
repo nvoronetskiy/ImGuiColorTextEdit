@@ -1846,8 +1846,6 @@ const TextEditor::Palette& TextEditor::GetLightPalette()
 	return p;
 }
 
-TextEditor::Palette TextEditor::defaultPalette = TextEditor::GetDarkPalette();
-
 
 //
 //	TextEditor::Cursor::adjustCoordinateForInsert
@@ -2393,7 +2391,7 @@ TextEditor::Coordinate TextEditor::Document::getLeft(Coordinate from, bool wordM
 		auto index = getIndex(from);
 
 		// now skip all whitespaces
-		while (index > 0 && CodePoint::isWhiteSpace(line[index].codepoint)) {
+		while (index > 0 && (index < line.size()) && CodePoint::isWhiteSpace(line[index].codepoint)) {
 			index--;
 		}
 
@@ -2496,26 +2494,34 @@ TextEditor::Coordinate TextEditor::Document::findWordStart(Coordinate from) cons
 	} else {
 		auto& line = at(from.line);
 		auto index = getIndex(from);
-		auto firstCharacter = line[index].codepoint;
+        if (index < line.size())
+        {
 
-		if (CodePoint::isWhiteSpace(firstCharacter)) {
-			while (index > 0 && CodePoint::isWhiteSpace(line[index - 1].codepoint)) {
-				index--;
-			}
+            auto firstCharacter = line[index].codepoint;
 
-		} else if (CodePoint::isWord(firstCharacter)) {
-			while (index > 0 && CodePoint::isWord(line[index - 1].codepoint)) {
-				index--;
-			}
+            if (CodePoint::isWhiteSpace(firstCharacter)) {
+                while (index > 0 && CodePoint::isWhiteSpace(line[index - 1].codepoint)) {
+                    index--;
+                }
 
-		} else {
-			while (index > 0 && !CodePoint::isWord(line[index - 1].codepoint) && !CodePoint::isWhiteSpace(line[index - 1].codepoint)) {
-				index--;
-			}
-		}
+            }
+            else if (CodePoint::isWord(firstCharacter)) {
+                while (index > 0 && CodePoint::isWord(line[index - 1].codepoint)) {
+                    index--;
+                }
 
-		return Coordinate(from.line, getColumn(line, index));
+            }
+            else {
+                while (index > 0 && !CodePoint::isWord(line[index - 1].codepoint) && !CodePoint::isWhiteSpace(line[index - 1].codepoint)) {
+                    index--;
+                }
+            }
+
+            return Coordinate(from.line, getColumn(line, index));
+        }
 	}
+
+    return from;
 }
 
 
@@ -3123,14 +3129,14 @@ TextEditor::Bracketeer::iterator TextEditor::Bracketeer::getActive(Coordinate lo
 //
 
 template <typename T>
-struct Range {
+struct RangeX {
 	T low;
 	T high;
 	T stride;
 };
 
-using Range16 = Range<ImWchar16>;
-using Range32 = Range<ImWchar32>;
+using Range16 = RangeX<ImWchar16>;
+using Range32 = RangeX<ImWchar32>;
 
 template <typename T>
 struct CaseRange {
