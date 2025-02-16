@@ -5486,7 +5486,7 @@ static bool isCStylePunctuation(ImWchar character) {
 //	TextEditor::Language::C
 //
 
-const TextEditor::Language& TextEditor::Language::C() {
+const TextEditor::Language* TextEditor::Language::C() {
 	static bool initialized = false;
 	static TextEditor::Language language;
 
@@ -5520,7 +5520,7 @@ const TextEditor::Language& TextEditor::Language::C() {
 		initialized = true;
 	}
 
-	return language;
+	return &language;
 }
 
 
@@ -5528,7 +5528,7 @@ const TextEditor::Language& TextEditor::Language::C() {
 //	TextEditor::Language::Cpp
 //
 
-const TextEditor::Language& TextEditor::Language::Cpp() {
+const TextEditor::Language* TextEditor::Language::Cpp() {
 	static bool initialized = false;
 	static TextEditor::Language language;
 
@@ -5568,7 +5568,7 @@ const TextEditor::Language& TextEditor::Language::Cpp() {
 		initialized = true;
 	}
 
-	return language;
+	return &language;
 }
 
 
@@ -6108,7 +6108,7 @@ yy49:
 //	TextEditor::Language::Cs
 //
 
-const TextEditor::Language& TextEditor::Language::Cs() {
+const TextEditor::Language* TextEditor::Language::Cs() {
 	static bool initialized = false;
 	static TextEditor::Language language;
 
@@ -6140,7 +6140,7 @@ const TextEditor::Language& TextEditor::Language::Cs() {
 		initialized = true;
 	}
 
-	return language;
+	return &language;
 }
 
 
@@ -6148,7 +6148,7 @@ const TextEditor::Language& TextEditor::Language::Cs() {
 //	TextEditor::Language::AngelScript
 //
 
-const TextEditor::Language& TextEditor::Language::AngelScript() {
+const TextEditor::Language* TextEditor::Language::AngelScript() {
 	static bool initialized = false;
 	static TextEditor::Language language;
 
@@ -6179,7 +6179,7 @@ const TextEditor::Language& TextEditor::Language::AngelScript() {
 		initialized = true;
 	}
 
-	return language;
+	return &language;
 }
 
 
@@ -6467,7 +6467,7 @@ static bool isLuaStylePunctuation(ImWchar character) {
 //	TextEditor::Language::Lua
 //
 
-const TextEditor::Language& TextEditor::Language::Lua() {
+const TextEditor::Language* TextEditor::Language::Lua() {
 	static bool initialized = false;
 	static TextEditor::Language language;
 
@@ -6495,7 +6495,7 @@ const TextEditor::Language& TextEditor::Language::Lua() {
 		initialized = true;
 	}
 
-	return language;
+	return &language;
 }
 
 
@@ -6771,7 +6771,7 @@ yy18:
 //	TextEditor::Language::Python
 //
 
-const TextEditor::Language& TextEditor::Language::Python() {
+const TextEditor::Language* TextEditor::Language::Python() {
 	static bool initialized = false;
 	static TextEditor::Language language;
 
@@ -6801,7 +6801,7 @@ const TextEditor::Language& TextEditor::Language::Python() {
 		initialized = true;
 	}
 
-	return language;
+	return &language;
 }
 
 
@@ -6809,7 +6809,7 @@ const TextEditor::Language& TextEditor::Language::Python() {
 //	TextEditor::Language::Glsl
 //
 
-const TextEditor::Language& TextEditor::Language::Glsl() {
+const TextEditor::Language* TextEditor::Language::Glsl() {
 	static bool initialized = false;
 	static TextEditor::Language language;
 
@@ -6855,7 +6855,7 @@ const TextEditor::Language& TextEditor::Language::Glsl() {
 		initialized = true;
 	}
 
-	return language;
+	return &language;
 }
 
 
@@ -6863,7 +6863,7 @@ const TextEditor::Language& TextEditor::Language::Glsl() {
 //	TextEditor::Language::Hlsl
 //
 
-const TextEditor::Language& TextEditor::Language::Hlsl() {
+const TextEditor::Language* TextEditor::Language::Hlsl() {
 	static bool initialized = false;
 	static TextEditor::Language language;
 
@@ -6912,7 +6912,7 @@ const TextEditor::Language& TextEditor::Language::Hlsl() {
 		initialized = true;
 	}
 
-	return language;
+	return &language;
 }
 
 
@@ -7193,7 +7193,7 @@ yy24:
 //	TextEditor::Language::Json
 //
 
-const TextEditor::Language &TextEditor::Language::Json() {
+const TextEditor::Language* TextEditor::Language::Json() {
 	static bool initialized = false;
 	static TextEditor::Language language;
 
@@ -7212,7 +7212,7 @@ const TextEditor::Language &TextEditor::Language::Json() {
 		initialized = true;
 	}
 
-	return language;
+	return &language;
 }
 
 
@@ -7633,7 +7633,7 @@ yy37:
 //	TextEditor::Language::Markdown
 //
 
-const TextEditor::Language& TextEditor::Language::Markdown() {
+const TextEditor::Language* TextEditor::Language::Markdown() {
 	static bool initialized = false;
 	static TextEditor::Language language;
 
@@ -7646,5 +7646,5 @@ const TextEditor::Language& TextEditor::Language::Markdown() {
 		initialized = true;
 	}
 
-	return language;
+	return &language;
 }

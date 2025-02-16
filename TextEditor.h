@@ -266,20 +266,20 @@ public:
 
 		std::function<Iterator(Iterator start, Iterator end, Color& color)> customTokenizer;
 
-		static const Language& C();
-		static const Language& Cpp();
-		static const Language& Cs();
-		static const Language& AngelScript();
-		static const Language& Lua();
-		static const Language& Python();
-		static const Language& Glsl();
-		static const Language& Hlsl();
-		static const Language& Json();
-		static const Language& Markdown();
+		static const Language* C();
+		static const Language* Cpp();
+		static const Language* Cs();
+		static const Language* AngelScript();
+		static const Language* Lua();
+		static const Language* Python();
+		static const Language* Glsl();
+		static const Language* Hlsl();
+		static const Language* Json();
+		static const Language* Markdown();
 	};
 
-	inline void SetLanguage(const Language& l) { language = &l; languageChanged = true; }
-	inline const Language& GetLanguage() const { return *language; };
+	inline void SetLanguage(const Language* l) { language = l; languageChanged = true; }
+	inline const Language* GetLanguage() const { return language; };
 	inline bool HasLanguage() const { return language != nullptr; }
 	inline std::string GetLanguageName() const { return language == nullptr ? "None" : language->name; }
 
