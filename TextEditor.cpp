@@ -460,7 +460,7 @@ void TextEditor::renderLineNumbers() {
 void TextEditor::renderDecorations() {
 	if (decoratorWidth > 0.0f && decoratorCallback) {
 		auto cursorScreenPos = ImGui::GetCursorScreenPos();
-		auto position = ImVec2(ImGui::GetWindowPos().x + decorationOffset, cursorScreenPos.y);
+		auto position = ImVec2(ImGui::GetWindowPos().x + decorationOffset, cursorScreenPos.y + glyphSize.y * firstVisibleLine);
 		Decorator decorator{0, decoratorWidth, glyphSize.y};
 
 		for (int i = firstVisibleLine; i <= lastVisibleLine; i++) {
