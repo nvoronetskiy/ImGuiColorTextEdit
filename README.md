@@ -138,7 +138,8 @@ Dear ImGui context by doing the following:
 	- Ctrl-/ toggles comments if language with single line comments is specified.
 
 - Other:
-	- Mouse swiping or mouse wheel movements scrolls/pans the document.
+	- Mouse wheel movements scroll/pan the document.
+	- Middle mouse button and dragging scrolls/pans the document.
 	- Insert key toggles between insert (default) and overwrite modes.
 	- Clicking or dragging over line numbers select line(s).
 

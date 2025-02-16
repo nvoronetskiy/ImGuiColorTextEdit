@@ -585,15 +585,8 @@ void TextEditor::handleKeyboardInputs() {
 //
 
 void TextEditor::handleMouseInteractions() {
-	// pan with dragging middle mouse button
-	if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle)) {
-		ImVec2 mouseDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle);
-		ImGui::SetScrollX(ImGui::GetScrollX() - mouseDelta.x);
-		ImGui::SetScrollY(ImGui::GetScrollY() - mouseDelta.y);
-		ImGui::ResetMouseDragDelta(ImGuiMouseButton_Middle);
-
-	// ignore other interactions when the editor is not hovered
-	} else if (ImGui::IsWindowHovered()) {
+	// ignore interactions when the editor is not hovered
+	if (ImGui::IsWindowHovered()) {
 		auto io = ImGui::GetIO();
 		ImVec2 mousePos = ImGui::GetMousePos() - ImGui::GetCursorScreenPos();
 		ImVec2 absoluteMousePos = ImGui::GetMousePos() - ImGui::GetWindowPos();
@@ -624,6 +617,13 @@ void TextEditor::handleMouseInteractions() {
 			}
 
 			ensureCursorIsVisible = true;
+
+		} else if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle) && overText) {
+			// pan with dragging middle mouse button
+			ImVec2 mouseDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle);
+			ImGui::SetScrollX(ImGui::GetScrollX() - mouseDelta.x);
+			ImGui::SetScrollY(ImGui::GetScrollY() - mouseDelta.y);
+			ImGui::ResetMouseDragDelta(ImGuiMouseButton_Middle);
 
 		} else if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
 			// handle right clicks by setting up context menu (if required)
