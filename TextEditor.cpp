@@ -29,6 +29,7 @@ void TextEditor::setText(const std::string &text) {
 	document.setText(text);
 	transactions.clear();
 	cursors.clearAll();
+	bracketeer.reset();
 }
 
 
@@ -87,6 +88,7 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 	// recolorize entire document (if showMatchingBrackets option or language have changed)
 	if (showMatchingBracketsChanged || languageChanged) {
 		colorizer.updateEntireDocument(document, language);
+		bracketeer.reset();
 	}
 
 	// recolorize changed lines (if required)
@@ -3118,6 +3120,17 @@ bool TextEditor::Colorizer::matches(Line::iterator start, Line::iterator end, co
 
 
 //
+//	TextEditor::Bracketeer::reset
+//
+
+void TextEditor::Bracketeer::reset() {
+	clear();
+	active = end();
+	activeLocation = Coordinate::invalid();
+}
+
+
+//
 //	TextEditor::Bracketeer::update
 //
 
@@ -3137,7 +3150,7 @@ void TextEditor::Bracketeer::update(Document& document) {
 		for (auto index = 0; index < document[line].glyphs(); index++) {
 			auto& glyph = document[line][index];
 
-			// handle a bracket opener that is not in a comment, string or preprocessor statement
+			// handle a "bracket opener" that is not in a comment, string or preprocessor statement
 			if (isBracketCandidate(glyph) && isBracketOpener(glyph.codepoint)) {
 				// start a new level
 				levels.emplace_back(size());
@@ -3145,7 +3158,7 @@ void TextEditor::Bracketeer::update(Document& document) {
 				glyph.color = bracketColors[level % 3];
 				level++;
 
-			// handle a bracket closer that is not in a comment, string or preprocessor statement
+			// handle a "bracket closer" that is not in a comment, string or preprocessor statement
 			} else if (isBracketCandidate(glyph) && isBracketCloser(glyph.codepoint)) {
 				if (levels.size()) {
 					auto& lastBracket = at(levels.back());

@@ -665,6 +665,9 @@ private:
 
 	class Bracketeer : public std::vector<Bracket> {
 	public:
+		// reset the bracketeer
+		void reset();
+
 		// update the list of bracket pairs in the document and colorize the relevant glyphs
 		void update(Document& document);
 
