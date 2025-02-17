@@ -95,22 +95,24 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 		cursors.update();
 	}
 
-	// recolorize entire document (if showMatchingBrackets option or language have changed)
+	// recolorize entire document and reset brackets (if required)
 	if (showMatchingBracketsChanged || languageChanged) {
 		colorizer.updateEntireDocument(document, language);
 		bracketeer.reset();
 	}
 
-	// recolorize changed lines (if required)
 	auto documentChanged = document.isUpdated();
 
-	if (language && documentChanged) {
-		colorizer.updateChangedLines(document, language);
-	}
+	if (language) {
+		if (documentChanged) {
+			// recolorize updated lines
+			colorizer.updateChangedLines(document, language);
+		}
 
-	// rebuild bracket list (if document or showMatchingBrackets option have changed)
-	if (language && showMatchingBrackets && (documentChanged || showMatchingBracketsChanged)) {
-		bracketeer.update(document);
+		if (showMatchingBrackets && (documentChanged || showMatchingBracketsChanged || languageChanged)) {
+			// rebuild bracket list
+			bracketeer.update(document);
+		}
 	}
 
 	// reset changed states
@@ -599,7 +601,9 @@ void TextEditor::renderFindReplace(ImVec2 pos, ImVec2 available) {
 			focusOnEditor = true;
 		}
 
-		if (!findText.size()) {
+		bool disableFindButtons = !findText.size();
+
+		if (disableFindButtons) {
 			ImGui::BeginDisabled();
 		}
 
@@ -615,7 +619,7 @@ void TextEditor::renderFindReplace(ImVec2 pos, ImVec2 available) {
 			findAll();
 		}
 
-		if (!findText.size()) {
+		if (disableFindButtons) {
 			ImGui::EndDisabled();
 		}
 
@@ -638,11 +642,21 @@ void TextEditor::renderFindReplace(ImVec2 pos, ImVec2 available) {
 			focusOnEditor = true;
 		}
 
+		if (readOnly) {
+			ImGui::BeginDisabled();
+		}
+
 		ImGui::SetNextItemWidth(fieldWidth);
 		inputString("###replace", &replaceText);
 		ImGui::SameLine();
 
-		if (!findText.size() || !replaceText.size()) {
+		if (readOnly) {
+			ImGui::EndDisabled();
+		}
+
+		bool disableReplaceButtons = readOnly || !findText.size() || !replaceText.size();
+
+		if (disableReplaceButtons) {
 			ImGui::BeginDisabled();
 		}
 
@@ -656,7 +670,7 @@ void TextEditor::renderFindReplace(ImVec2 pos, ImVec2 available) {
 			replaceAll();
 		}
 
-		if (!findText.size() || !replaceText.size()) {
+		if (disableReplaceButtons) {
 			ImGui::EndDisabled();
 		}
 
@@ -2605,12 +2619,12 @@ std::string TextEditor::Document::getText() const {
 	std::string text;
 	char utf8[4];
 
-	for (auto i = begin(); i < end(); i++) {
-		for (auto& glyph : *i) {
-			text.append(std::string_view(utf8, CodePoint::write(utf8, glyph.codepoint)));
+	for (auto line = begin(); line < end(); line++) {
+		for (auto glyph = line->begin(); glyph < line->end(); glyph++) {
+			text.append(std::string_view(utf8, CodePoint::write(utf8, glyph->codepoint)));
 		}
 
-		if (i < end() - 1) {
+		if (line < end() - 1) {
 			text += "\n";
 		}
 	}
@@ -2664,22 +2678,22 @@ std::string TextEditor::Document::getLineText(int line) const {
 
 void TextEditor::Document::updateMaximumColumn(int first, int last) {
 	// process specified lines
-	for (auto i = begin() + first; i <= begin() + last; i++) {
+	for (auto line = begin() + first; line <= begin() + last; line++) {
 		// determine the maximum column number for this line
 		int column = 0;
 
-		for (auto glyph = i->begin(); glyph < i->end(); glyph++) {
+		for (auto glyph = line->begin(); glyph < line->end(); glyph++) {
 			column = (glyph->codepoint == '\t') ? ((column / tabSize) + 1) * tabSize : column + 1;
 		}
 
-		i->maxColumn = column;
+		line->maxColumn = column;
 	}
 
 	// determine maximum line number in document
 	maxColumn = 0;
 
-	for (auto i = begin(); i < end(); i++) {
-		maxColumn = std::max(maxColumn, i->maxColumn);
+	for (auto line = begin(); line < end(); line++) {
+		maxColumn = std::max(maxColumn, line->maxColumn);
 	}
 }
 
@@ -3065,12 +3079,12 @@ void TextEditor::Transactions::add(std::shared_ptr<Transaction> transaction) {
 void TextEditor::Transactions::undo(Document& document, Cursors& cursors) {
 	auto& transaction = at(--undoIndex);
 
-	for (auto i = transaction->rbegin(); i < transaction->rend(); i++) {
-		if (i->type == Action::Type::insertText) {
-			document.deleteText(i->start, i->end);
+	for (auto action = transaction->rbegin(); action < transaction->rend(); action++) {
+		if (action->type == Action::Type::insertText) {
+			document.deleteText(action->start, action->end);
 
 		} else {
-			document.insertText(i->start, i->text);
+			document.insertText(action->start, action->text);
 		}
 	}
 
@@ -3085,12 +3099,12 @@ void TextEditor::Transactions::undo(Document& document, Cursors& cursors) {
 void TextEditor::Transactions::redo(Document& document, Cursors& cursors) {
 	auto& transaction = at(undoIndex++);
 
-	for (auto& action : *transaction) {
-		if (action.type == Action::Type::insertText) {
-			document.insertText(action.start, action.text);
+	for (auto action = transaction->rbegin(); action < transaction->rend(); action++) {
+		if (action->type == Action::Type::insertText) {
+			document.insertText(action->start, action->text);
 
 		} else {
-			document.deleteText(action.start, action.end);
+			document.deleteText(action->start, action->end);
 		}
 	}
 
