@@ -43,6 +43,10 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 		updatePalette();
 	}
 
+	// get current position and available space
+	auto pos = ImGui::GetCursorPos();
+	auto available = ImGui::GetContentRegionAvail();
+
 	// get font information and determine start of line numbers, decorations and text
 	font = ImGui::GetFont();
 	fontSize = ImGui::GetFontSize();
@@ -69,6 +73,12 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 	// set style
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4(palette.get(Color::background)));
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+
+	// ensure editor has focus (if required)
+	if (focusOnEditor) {
+		ImGui::SetNextWindowFocus();
+		focusOnEditor = false;
+	}
 
 	// start a new child window
 	// this must be done before we handle keyboard and mouse interactions to ensure correct ImGui context
@@ -199,6 +209,9 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 	ImGui::EndChild();
 	ImGui::PopStyleVar();
 	ImGui::PopStyleColor();
+
+	// render find/replace popup
+	renderFindReplace(pos, available);
 }
 
 
@@ -480,6 +493,179 @@ void TextEditor::renderDecorations() {
 
 
 //
+//	latchButton
+//
+
+static bool latchButton(const char* label, bool* value, const ImVec2& size) {
+	bool changed = false;
+	ImVec4* colors = ImGui::GetStyle().Colors;
+
+	if (*value) {
+		ImGui::PushStyleColor(ImGuiCol_Button, colors[ImGuiCol_ButtonActive]);
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, colors[ImGuiCol_ButtonActive]);
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, colors[ImGuiCol_TableBorderLight]);
+
+	} else {
+		ImGui::PushStyleColor(ImGuiCol_Button, colors[ImGuiCol_TableBorderLight]);
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, colors[ImGuiCol_TableBorderLight]);
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, colors[ImGuiCol_ButtonActive]);
+	}
+
+	ImGui::Button(label, size);
+
+	if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+		*value = !*value;
+		changed = true;
+	}
+
+	ImGui::PopStyleColor(3);
+	return changed;
+}
+
+
+//
+//	inputString
+//
+
+static bool inputString(const char* label, std::string* value, ImGuiInputTextFlags flags=ImGuiInputTextFlags_None) {
+	flags |=
+		ImGuiInputTextFlags_NoUndoRedo |
+		ImGuiInputTextFlags_CallbackResize;
+
+	return ImGui::InputText(label, (char*) value->c_str(), value->capacity() + 1, flags, [](ImGuiInputTextCallbackData* data) {
+		if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
+			std::string* value = (std::string*) data->UserData;
+			value->resize(data->BufTextLen);
+			data->Buf = (char*) value->c_str();
+		}
+
+		return 0;
+	}, value);
+}
+
+
+//
+//	TextEditor::renderFindReplace
+//
+
+void TextEditor::renderFindReplace(ImVec2 pos, ImVec2 available) {
+	// render find/replace window (if required)
+	if (findReplaceVisible) {
+		// calculate sizes
+		auto& style = ImGui::GetStyle();
+		auto fieldWidth = 250.0f;
+
+		auto replaceWidth = ImGui::CalcTextSize(" Replace ").x + style.FramePadding.x * 2.0f;
+		auto replaceAllWidth = ImGui::CalcTextSize(" Replace All ").x + style.FramePadding.x * 2.0f;
+		auto optionWidth = ImGui::CalcTextSize("Aa").x + style.FramePadding.x * 2.0f;
+
+		auto windowHeight =
+			style.ChildBorderSize * 2.0f +
+			style.WindowPadding.y * 2.0f +
+			ImGui::GetFrameHeight() * 2.0f +
+			style.ItemSpacing.y;
+
+		auto windowWidth =
+			style.ChildBorderSize * 2.0f +
+			style.WindowPadding.x * 2.0f +
+			fieldWidth + style.ItemSpacing.x +
+			replaceWidth + style.ItemSpacing.x +
+			replaceAllWidth + style.ItemSpacing.x +
+			optionWidth * 3.0f + style.ItemSpacing.x * 2.0f;
+
+		// create window
+		ImGui::SetCursorPos(ImVec2(
+			pos.x + available.x - windowWidth - style.ScrollbarSize - style.ItemSpacing.x,
+			pos.y + style.ItemSpacing.y * 2.0f));
+
+		ImGui::BeginChild("find-replace", ImVec2(windowWidth, windowHeight), ImGuiChildFlags_Borders);
+		ImGui::SetNextItemWidth(fieldWidth);
+
+		if (focusOnFind) {
+			ImGui::SetKeyboardFocusHere();
+			focusOnFind = false;
+		}
+
+		if (inputString("###find", &findText, ImGuiInputTextFlags_AutoSelectAll)) {
+			if (findText.size()) {
+				selectFirstOccurrenceOf(findText, caseSensitiveFind, wholeWordFind);
+
+			} else {
+				cursors.clearAll();
+			}
+		}
+
+		if (ImGui::IsItemDeactivated() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))){
+			focusOnEditor = true;
+		}
+
+		if (!findText.size()) {
+			ImGui::BeginDisabled();
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Find", ImVec2(replaceWidth, 0.0f))) {
+			find();
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Find All", ImVec2(replaceAllWidth, 0.0f))) {
+			findAll();
+		}
+
+		if (!findText.size()) {
+			ImGui::EndDisabled();
+		}
+
+		ImGui::SameLine();
+
+		if (latchButton("Aa", &caseSensitiveFind, ImVec2(optionWidth, 0.0f))) {
+			find();
+		}
+
+		ImGui::SameLine();
+
+		if (latchButton("[]", &wholeWordFind, ImVec2(optionWidth, 0.0f))) {
+			find();
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("x", ImVec2(optionWidth, 0.0f))) {
+			findReplaceVisible = false;
+			focusOnEditor = true;
+		}
+
+		ImGui::SetNextItemWidth(fieldWidth);
+		inputString("###replace", &replaceText);
+		ImGui::SameLine();
+
+		if (!findText.size() || !replaceText.size()) {
+			ImGui::BeginDisabled();
+		}
+
+		if (ImGui::Button("Replace", ImVec2(replaceWidth, 0.0f))) {
+			replace();
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Replace All", ImVec2(replaceAllWidth, 0.0f))) {
+			replaceAll();
+		}
+
+		if (!findText.size() || !replaceText.size()) {
+			ImGui::EndDisabled();
+		}
+
+		ImGui::EndChild();
+	}
+}
+
+
+//
 //	TextEditor::handleKeyboardInputs
 //
 
@@ -543,6 +729,11 @@ void TextEditor::handleKeyboardInputs() {
 		else if (!readOnly && isAltOnly && ImGui::IsKeyPressed(ImGuiKey_UpArrow)) { moveUpLines(); }
 		else if (!readOnly && isAltOnly && ImGui::IsKeyPressed(ImGuiKey_DownArrow)) { moveDownLines(); }
 		else if (!readOnly && language && isShortcut && ImGui::IsKeyPressed(ImGuiKey_Slash)) { toggleComments(); }
+
+		// find/replace support
+		else if (isShortcut && ImGui::IsKeyPressed(ImGuiKey_F)) { openFindReplace(); }
+		else if (isShiftShortcut && ImGui::IsKeyPressed(ImGuiKey_F)) { findAll(); }
+		else if (isShortcut && ImGui::IsKeyPressed(ImGuiKey_G)) { findNext(); }
 
 		// change insert mode
 		else if (isNoModifiers && ImGui::IsKeyPressed(ImGuiKey_Insert)) { overwrite = !overwrite; }
@@ -976,6 +1167,82 @@ void TextEditor::replaceTextInAllCursors(const std::string_view& text) {
 	auto transaction = startTransaction();
 	insertTextIntoAllCursors(transaction, text);
 	endTransaction(transaction);
+}
+
+
+//
+//	TextEditor::openFindReplace
+//
+
+void TextEditor::openFindReplace() {
+	findReplaceVisible = true;
+	focusOnFind = true;
+}
+
+
+//
+//	TextEditor::find
+//
+
+void TextEditor::find() {
+	if (findText.size()) {
+		selectNextOccurrenceOf(findText, caseSensitiveFind, wholeWordFind);
+		focusOnEditor = true;
+	}
+}
+
+
+//
+//	TextEditor::findNext
+//
+
+void TextEditor::findNext() {
+	if (findText.size()) {
+		selectNextOccurrenceOf(findText, caseSensitiveFind, wholeWordFind);
+		focusOnEditor = true;
+	}
+}
+
+
+//
+//	TextEditor::findAll
+//
+
+void TextEditor::findAll() {
+	if (findText.size()) {
+		selectAllOccurrencesOf(findText, caseSensitiveFind, wholeWordFind);
+		focusOnEditor = true;
+	}
+}
+
+
+//
+//	TextEditor::replace
+//
+
+void TextEditor::replace() {
+	if (findText.size()) {
+		if (!cursors.anyHasSelection()) {
+			selectNextOccurrenceOf(findText, caseSensitiveFind, wholeWordFind);
+		}
+
+		replaceTextInCurrentCursor(replaceText);
+		selectNextOccurrenceOf(findText, caseSensitiveFind, wholeWordFind);
+		focusOnEditor = true;
+	}
+}
+
+
+//
+//	TextEditor::replaceAll
+//
+
+void TextEditor::replaceAll() {
+	if (findText.size()) {
+		selectAllOccurrencesOf(findText, caseSensitiveFind, wholeWordFind);
+		replaceTextInAllCursors(replaceText);
+		focusOnEditor = true;
+	}
 }
 
 
@@ -1952,7 +2219,7 @@ TextEditor::Coordinate TextEditor::Cursor::adjustCoordinateForInsert(Coordinate 
 	coordinate.line += end.line - start.line;
 
 	if (end.line == coordinate.line) {
-		coordinate.column += end.column;
+		coordinate.column += end.column - start.column;
 	}
 
 	return coordinate;
@@ -1977,7 +2244,7 @@ TextEditor::Coordinate TextEditor::Cursor::adjustCoordinateForDelete(Coordinate 
 	coordinate.line -= end.line - start.line;
 
 	if (end.line == coordinate.line) {
-		coordinate.column -= end.column;
+		coordinate.column -= end.column - start.column;
 	}
 
 	return coordinate;

@@ -119,6 +119,11 @@ public:
 	inline void ReplaceTextInCurrentCursor(const std::string_view& text) { if (!readOnly) replaceTextInCurrentCursor(text); }
 	inline void ReplaceTextInAllCursors(const std::string_view& text) { if (!readOnly) replaceTextInAllCursors(text); }
 
+	inline void OpenFindReplaceWindow() { findReplaceVisible = true; focusOnFind = true; }
+	inline bool HasFindString() const { return findText.size(); }
+	inline void FindNext() { findNext(); }
+	inline void FindAll() { findAll(); }
+
 	// access markers (line numbers are zero-based)
 	inline void AddMarker(int line, ImU32 lineNumberColor, ImU32 textColor, const std::string_view& lineNumberTooltip, const std::string_view& textTooltip) { addMarker(line, lineNumberColor, textColor, lineNumberTooltip, textTooltip); }
 	inline void ClearMarkers() { clearMarkers(); }
@@ -707,6 +712,7 @@ private:
 	void renderMargin();
 	void renderLineNumbers();
 	void renderDecorations();
+	void renderFindReplace(ImVec2 pos, ImVec2 available);
 
 	// keyboard and mouse interactions
 	void handleKeyboardInputs();
@@ -739,6 +745,13 @@ private:
 
 	void replaceTextInCurrentCursor(const std::string_view& text);
 	void replaceTextInAllCursors(const std::string_view& text);
+
+	void openFindReplace();
+	void find();
+	void findNext();
+	void findAll();
+	void replace();
+	void replaceAll();
 
 	// marker support
 	void addMarker(int line, ImU32 lineNumberColor, ImU32 textColor, const std::string_view& lineNumberTooltip, const std::string_view& textTooltip);
@@ -839,6 +852,15 @@ private:
 	static constexpr int decorationMargin = 1;
 	static constexpr int textMargin = 2;
 	static constexpr int cursorWidth = 1;
+
+	// find and replace support
+	bool findReplaceVisible = false;
+	bool focusOnEditor = true;
+	bool focusOnFind = false;
+	std::string findText;
+	std::string replaceText;
+	bool caseSensitiveFind = false;
+	bool wholeWordFind = false;
 
 	// interaction context
 	float lastClickTime = -1.0f;
