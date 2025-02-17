@@ -63,7 +63,7 @@ public:
 	inline void SetText(const std::string_view& text) { setText(text); }
 	inline std::string GetText() { return document.getText(); }
 	inline bool IsEmpty() const { return document.size() == 1 && document[0].size() == 0; }
-	inline int GetLineCount() const { return document.lines(); }
+	inline int GetLineCount() const { return document.lineCount(); }
 
 	// render the text editor in a Dear ImGui context
 	inline void Render(const char* title, const ImVec2& size=ImVec2(), bool border=false) { render(title, size, border); }
@@ -81,8 +81,8 @@ public:
 	// manipulate cursors and selections (line numbers are zero-based)
 	inline void SetCursor(int line, int column) { moveTo(document.normalizeCoordinate(Coordinate(line, column)), false); }
 	inline void SelectAll() { selectAll(); }
-	inline void SelectLine(int line) { if (line >= 0 && line < document.lines()) selectLine(line); }
-	inline void SelectLines(int start, int end) { if (start >= 0 && end < document.lines() && start <= end) selectLines(start, end); }
+	inline void SelectLine(int line) { if (line >= 0 && line < document.lineCount()) selectLine(line); }
+	inline void SelectLines(int start, int end) { if (start >= 0 && end < document.lineCount() && start <= end) selectLines(start, end); }
 	inline void AddNextOccurrence() { addNextOccurrence(); }
 	inline void SelectAllOccurrences() { selectAllOccurrences(); }
 	inline bool AnyCursorHasSelection() const { return cursors.anyHasSelection(); }
@@ -213,12 +213,25 @@ public:
 	static const Palette& GetDarkPalette();
 	static const Palette& GetLightPalette();
 
-	// iterator used in language specific tokonizers
+	// a single colored character (a glyph)
+	class Glyph {
+		public:
+			// constructors
+			Glyph() = default;
+			Glyph(ImWchar cp) : codepoint(cp) {}
+			Glyph(ImWchar cp, Color col) : codepoint(cp), color(col) {}
+
+			// properties
+			ImWchar codepoint = 0;
+			Color color = Color::text;
+		};
+
+	// iterator used in language specific tokenizers
 	class Iterator {
 	public:
 		// constructors
 		Iterator() = default;
-		Iterator(void* l, int i) : line(l), index(i) {}
+		Iterator(Glyph* g) : glyph(g) {}
 
 		using iterator_category = std::forward_iterator_tag;
 		using difference_type = std::ptrdiff_t;
@@ -226,52 +239,78 @@ public:
 		using pointer = ImWchar*;
 		using reference = ImWchar&;
 
-		reference operator*() const;
-		pointer operator->() const;
-		inline Iterator& operator++() { index++; return *this; }
-		inline Iterator operator++(int) { Iterator tmp = *this; index++; return tmp; }
-		inline int operator-(const Iterator& a) { return index - a.index; }
-		inline friend bool operator== (const Iterator& a, const Iterator& b) { return a.index == b.index; };
-		inline friend bool operator!= (const Iterator& a, const Iterator& b) { return !(a == b); };
-		inline friend bool operator< (const Iterator& a, const Iterator& b) { return a.index < b.index; };
-		inline friend bool operator<= (const Iterator& a, const Iterator& b) { return a.index <= b.index; };
-		inline friend bool operator> (const Iterator& a, const Iterator& b) { return a.index > b.index; };
-		inline friend bool operator>= (const Iterator& a, const Iterator& b) { return a.index >= b.index; };
+		inline reference operator*() const { return glyph->codepoint; }
+		inline pointer operator->() const { return &(glyph->codepoint); }
+		inline Iterator& operator++() { glyph++; return *this; }
+		inline Iterator operator++(int) { Iterator tmp = *this; glyph++; return tmp; }
+		inline size_t operator-(const Iterator& a) { return glyph - a.glyph; }
+		inline friend bool operator== (const Iterator& a, const Iterator& b) { return a.glyph == b.glyph; };
+		inline friend bool operator!= (const Iterator& a, const Iterator& b) { return !(a.glyph == b.glyph); };
+		inline friend bool operator< (const Iterator& a, const Iterator& b) { return a.glyph < b.glyph; };
+		inline friend bool operator<= (const Iterator& a, const Iterator& b) { return a.glyph <= b.glyph; };
+		inline friend bool operator> (const Iterator& a, const Iterator& b) { return a.glyph > b.glyph; };
+		inline friend bool operator>= (const Iterator& a, const Iterator& b) { return a.glyph >= b.glyph; };
 
 	private:
 		// properties
-		void* line;
-		int index;
+		Glyph* glyph;
 	};
 
 	// language support
 	class Language {
 	public:
+		// name of the language
 		std::string name;
+
+		// the character that starts a preprocessor directive (can be 0 if language doesn't have this feature)
 		ImWchar preprocess = 0;
 
+		// a character sequence that start a single line comment (can be blank if language doesn't have this feature)
 		std::string singleLineComment;
+
+		// an alternate single line comment character sequence (can be blank if language doesn't have this feature)
 		std::string singleLineCommentAlt;
+
+		// the start and end character sequence for multiline comments (can be blank language doesn't have this feature)
 		std::string commentStart;
 		std::string commentEnd;
 
+		// flags specifying whether language supports single quoted ['] and/or double quoted [""] strings
 		bool hasSingleQuotedStrings = false;
 		bool hasDoubleQuotedStrings = false;
+
+		// other character sequences that starts and ends strings (can be blank if language doesn't have this feature)
 		std::string otherStringStart;
 		std::string otherStringEnd;
+
+		// alternate character sequences that starts and ends strings (can be blank if language doesn't have this feature)
 		std::string otherStringAltStart;
 		std::string otherStringAltEnd;
+
+		// character inside string used to escape the next character (can be 0 if language doesn't have this feature)
 		ImWchar stringEscape = 0;
 
+		// set of keywords, declarations, identifiers used in the language (can be blank if language doesn't have these features)
 		std::unordered_set<std::string> keywords;
 		std::unordered_set<std::string> declarations;
 		std::unordered_set<std::string> identifiers;
+
+		// function to determine if specified character in considered punctuation
 		std::function<bool(ImWchar)> isPunctuation;
+
+		// functions to tokenize identifiers and numbers (can be nullptr if language doesn't have this feature)
+		// start and end refer to the characters being tokonized
+		// functions should return the an iterator to the character after the token
+		//		returning start means no token was found
 		std::function<Iterator(Iterator start, Iterator end)> getIdentifier;
 		std::function<Iterator(Iterator start, Iterator end)> getNumber;
 
+		// function to implement custom tokonizer
+		// if a token is found function should return the an iterator to the character after the token
+		// and set the color
 		std::function<Iterator(Iterator start, Iterator end, Color& color)> customTokenizer;
 
+		// predefined language definitions
 		static const Language* C();
 		static const Language* Cpp();
 		static const Language* Cs();
@@ -289,7 +328,7 @@ public:
 	inline bool HasLanguage() const { return language != nullptr; }
 	inline std::string GetLanguageName() const { return language == nullptr ? "None" : language->name; }
 
-	// support unicode codepoints
+	// support functions for unicode codepoints
 	class CodePoint {
 	public:
 		static std::string_view::const_iterator skipBOM(std::string_view::const_iterator i, std::string_view::const_iterator end);
@@ -466,19 +505,6 @@ private:
 
 	std::vector<Marker> markers;
 
-	// a single colored character (a glyph)
-	class Glyph {
-	public:
-		// constructors
-		Glyph() = default;
-		Glyph(ImWchar cp) : codepoint(cp) {}
-		Glyph(ImWchar cp, Color col) : codepoint(cp), color(col) {}
-
-		// properties
-		ImWchar codepoint = 0;
-		Color color = Color::text;
-	};
-
 	// tokenizer state
 	enum class State : char {
 		inText,
@@ -493,13 +519,16 @@ private:
 	class Line : public std::vector<Glyph> {
 	public:
 		// get number of glyphs (as an int)
-		inline int glyphs() const { return static_cast<int>(size()); }
+		inline int glyphCount() const { return static_cast<int>(size()); }
 
 		// state at start of line
 		State state = State::inText;
 
-		// marker
+		// marker reference (0 means no marker for this line)
 		size_t marker;
+
+		// width of this line (in visible columns)
+		int maxColumn = 0;
 
 		// do we need to (re)colorize this line
 		bool colorize = true;
@@ -526,12 +555,11 @@ private:
 		std::string getLineText(int line) const;
 
 		// get number of lines (as an int)
-		inline int lines() const { return static_cast<int>(size()); }
+		inline int lineCount() const { return static_cast<int>(size()); }
 
-		// determine maximum column for this document or just a line
-		int maxColumn() const;
-		int maxColumn(const Line& line) const;
-		inline int maxColumn(int line) const { return maxColumn(at(line)); }
+		// update maximum column numbers for this document and the specified lines
+		void updateMaximumColumn(int first, int last);
+		inline int getMaxColumn() const { return maxColumn; }
 
 		// translate visible column to line index (and visa versa)
 		int getIndex(const Line& line, int column) const;
@@ -560,12 +588,13 @@ private:
 
 		// utility functions
 		bool isWholeWord(Coordinate start, Coordinate end) const;
-		inline bool isEndOfLine(Coordinate from) const { return getIndex(from) == at(from.line).glyphs(); }
-		inline bool isLastLine(int line) const { return line == lines() - 1; }
+		inline bool isEndOfLine(Coordinate from) const { return getIndex(from) == at(from.line).glyphCount(); }
+		inline bool isLastLine(int line) const { return line == lineCount() - 1; }
 		Coordinate normalizeCoordinate(Coordinate coordinate) const;
 
 	private:
 		int tabSize = 4;
+		int maxColumn = 0;
 		bool updated = false;
 	} document;
 
@@ -678,7 +707,7 @@ private:
 		void update(Document& document);
 
 		// manage active brackets
-		iterator getActive(Coordinate location);
+		iterator getActiveBracket(Coordinate location);
 
 	private:
 		// utility functions
@@ -695,7 +724,7 @@ private:
 		static inline ImWchar toBracketCloser(ImWchar ch) { return ch == '{' ? '}' : (ch == '[' ? ']' : (ch == '(' ? ')' : ch)); }
 		static inline ImWchar toBracketOpener(ImWchar ch) { return ch == '}' ? '{' : (ch == ']' ? '[' : (ch == ')' ? '(' : ch)); }
 
-		iterator active = end();
+		int active = -1;
 		Coordinate activeLocation = Coordinate::invalid();
 	} bracketeer;
 
