@@ -31,10 +31,10 @@ there now is little code in common.
 
 ![Screenshot](screenshot.png)
 
-Note: In the screenshot above, the tabs, menubar and floating find/replace window
-are not part of the text editor widget. They are part of a custom enclosing IDE
-(which is part of the larger [ObjectTalk](https://github.com/goossens/ObjectTalk)
-project). By not putting those things in the editor, integrators have maximum
+Note: In the screenshot above, the tabs and the menubar are not part of the
+text editor widget. They are part of a custom enclosing IDE (which is part of
+the larger [ObjectTalk](https://github.com/goossens/ObjectTalk) project).
+By not putting those things in the editor, integrators have maximum
 flexibility to wrap the editor in their own context in the way they see fit. The
 public API to externally implement these features is however included.
 
@@ -49,6 +49,8 @@ public API to externally implement these features is however included.
 - Has full undo/redo capabilities and supports native clipboard with UTF-8 encoded strings.
 - Extendable syntax highlighting for multiple languages and API for custom languages.
 - Customizable color palettes (a dark and light version that work with Dear ImGui defaults are included).
+- Has find/replace user interface and API with full undo/redo.
+- Find has options for whole word and/or case-sensitive searches.
 - Has Marker API to specify lines and/or line numbers to highlight and optional show tooltips (see [example](docs/markers.md)).
 - Has API to decorate each line (useful for debuggers and IDEs) (see [example](docs/lineDecorator.md)).
 - Provides optional and customizable line number or text right click context menus  (see [example](docs/contextMenus.md))
@@ -58,13 +60,11 @@ public API to externally implement these features is however included.
 - Supports blinking cursor (can be turned on/off using ImGui's global io.ConfigInputTextCursorBlink flag).
 - Allows bracket matching and coloring (similar to Visual Studio Code) to be turned on and off.
 - Supports multiple cursors and multiple selections.
-- API to support external find/replace functionality.
-- Search also has the option to search for whole words.
 - Auto indent with simplified implementation (can be turned on and off).
 - API to filter selections (with full undo support).
-- Uppercase/lowercase filter as example of selection filtering.
+- Uppercase/lowercase filter is example of selection filtering.
 - API to filter each line in editor (with full undo support).
-- Tabs to Space (and visa versa) as examples of line filtering.
+- Tabs to Space (and visa versa) are examples of line filtering.
 - API to strip trailing whitespaces.
 - Whitespace indicators for tabs and spaces (can be turned on and off).
 - No longer uses regular expressions for colorizing text (see below).
@@ -136,6 +136,11 @@ Dear ImGui context by doing the following:
 	- Ctrl-UpArrow moves current or all selected lines up.
 	- Ctrl-DownArrow moves current or all selected lines down.
 	- Ctrl-/ toggles comments if language with single line comments is specified.
+
+- Find & Replace:
+	- Ctrl-f opens the find and replace window.
+	- Shift-Ctrl-f finds all instances and makes them separate cursors.
+	- Ctrl-g finds next instance of search text.
 
 - Other:
 	- Mouse wheel movements scroll/pan the document.
