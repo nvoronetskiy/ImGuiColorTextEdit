@@ -580,6 +580,7 @@ void TextEditor::renderFindReplace(ImVec2 pos, ImVec2 available) {
 			pos.x + available.x - windowWidth - style.ScrollbarSize - style.ItemSpacing.x,
 			pos.y + style.ItemSpacing.y * 2.0f));
 
+		ImGui::SetNextWindowBgAlpha(0.6f);
 		ImGui::BeginChild("find-replace", ImVec2(windowWidth, windowHeight), ImGuiChildFlags_Borders);
 		ImGui::SetNextItemWidth(fieldWidth);
 
@@ -774,11 +775,12 @@ void TextEditor::handleKeyboardInputs() {
 
 		// handle regular text
 		if (!readOnly && !io.InputQueueCharacters.empty()) {
-			for (int i = 0; i < io.InputQueueCharacters.Size; i++) {
+			for (int i = 0; i < io.InputQueueCharacters.size(); i++) {
 				auto character = io.InputQueueCharacters[i];
 
-				if (character == '\n' || character >= 32)
+				if (character == '\n' || character >= 32) {
 					handleCharacter(character);
+				}
 			}
 
 			io.InputQueueCharacters.resize(0);

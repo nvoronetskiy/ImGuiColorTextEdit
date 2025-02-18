@@ -137,6 +137,11 @@ Dear ImGui context by doing the following:
 	- Ctrl-DownArrow moves current or all selected lines down.
 	- Ctrl-/ toggles comments if language with single line comments is specified.
 
+- Find & Replace:
+	- Ctrl-f opens the find and replace window.
+	- Shift-Ctrl-f finds all instances and makes them separate cursors.
+	- Ctrl-g finds next instance of search text.
+
 - Other:
 	- Mouse wheel movements scroll/pan the document.
 	- Middle mouse button and dragging scrolls/pans the document.
