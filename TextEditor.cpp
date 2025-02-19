@@ -589,6 +589,9 @@ static bool inputString(const char* label, std::string* value, ImGuiInputTextFla
 void TextEditor::renderFindReplace(ImVec2 pos, ImVec2 contentSize) {
 	// render find/replace window (if required)
 	if (findReplaceVisible) {
+		// save current screen position
+		auto currentScreenPosition = ImGui::GetCursorScreenPos();
+
 		// calculate sizes
 		auto& style = ImGui::GetStyle();
 		auto fieldWidth = 250.0f;
@@ -711,6 +714,7 @@ void TextEditor::renderFindReplace(ImVec2 pos, ImVec2 contentSize) {
 		}
 
 		ImGui::EndChild();
+		ImGui::SetCursorScreenPos(currentScreenPosition);
 	}
 }
 
