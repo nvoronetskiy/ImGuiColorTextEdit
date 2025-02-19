@@ -116,16 +116,18 @@ public:
 	// note on setting cursor and scrolling
 	//
 	// calling SetCursor or ScrollToLine has no effect until the next call to Render
-	// this is because we can only do layout calculations when we are in an Dear ImGui drawing context
+	// this is because we can only do layout calculations when we are in a Dear ImGui drawing context
 	// as a result, SetCursor or ScrollToLine just mark the request and let Render execute it
 	//
-	// the order of the calls is therefore important as they can fight each other
-	// so if you call SetText, SetCursor and/or ScrollToLine before render, the order should be:
+	// the order of the calls is therefore important as they can interfere with each other
+	// so if you call SetText, SetCursor and/or ScrollToLine before Render, the order should be:
 	//
 	// * call SetText first as it resets the entire editor state including cursors and scrolling
 	// * then call SetCursor as it sets the cursor and requests that we make the cursor visible (i.e. scroll to it)
-	// * then call ScrollToLine to mark the exact scroll location and it cancels the possible SetCursor scroll request
+	// * then call ScrollToLine to mark the exact scroll location (it cancels the possible SetCursor scroll request)
 	// * call Render to properly update the entire state
+	//
+	// this works on opening the editor as well as later
 
 	// find/replace support
 	inline void SelectFirstOccurrenceOf(const std::string_view& text, bool caseSensitive=true, bool wholeWord=false) { selectFirstOccurrenceOf(text, caseSensitive, wholeWord); }

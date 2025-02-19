@@ -44,11 +44,7 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 		updatePalette();
 	}
 
-	// get current position and available space
-	auto pos = ImGui::GetCursorPos();
-	auto available = ImGui::GetContentRegionAvail();
-
-	// get font information and determine horizontal offset for line numbers, decorations and text
+	// get font information and determine horizontal offsets for line numbers, decorations and text
 	font = ImGui::GetFont();
 	fontSize = ImGui::GetFontSize();
 	glyphSize = ImVec2(font->CalcTextSizeA(fontSize, FLT_MAX, -1.0f, "#").x, ImGui::GetTextLineHeightWithSpacing() * lineSpacing);
@@ -71,6 +67,83 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 		textOffset = decorationOffset + textMargin * glyphSize.x;
 	}
 
+	// get current position and total/visible editor size
+	auto pos = ImGui::GetCursorPos();
+	auto totalSize = ImVec2(textOffset + document.getMaxColumn() * glyphSize.x + cursorWidth, document.lineCount() * glyphSize.y);
+	auto visibleSize = ImGui::GetContentRegionAvail();
+
+	if (size.x > 0.0f) {
+		visibleSize.x = std::min(visibleSize.x, size.x);
+
+	} else if (size.x < 0.0f) {
+		visibleSize.x = std::max(visibleSize.x + size.x, 0.0f);
+	}
+
+	if (size.y > 0.0f) {
+		visibleSize.y = std::min(visibleSize.y, size.y);
+
+	} else if (size.y < 0.0f) {
+		visibleSize.y = std::max(visibleSize.y + size.y, 0.0f);
+	}
+
+	// see if we have scrollbars
+	float scrollbarSize = ImGui::GetStyle().ScrollbarSize;
+	float verticalScrollBarSize = (totalSize.y > visibleSize.y) ? scrollbarSize : 0.0f;
+	float horizontalScrollBarSize = (totalSize.x > visibleSize.x) ? scrollbarSize : 0.0f;
+
+	// determine visible lines and columns
+	visibleWidth = visibleSize.x - textOffset - verticalScrollBarSize;
+	visibleColumns = std::max(static_cast<int>(std::ceil(visibleWidth / glyphSize.x)), 0);
+	visibleHeight = visibleSize.y - horizontalScrollBarSize;
+	visibleLines = std::max(static_cast<int>(std::ceil(visibleHeight / glyphSize.y)), 0);
+
+	// determine scrolling requirements
+	float scrollX = -1.0f;
+	float scrollY = -1.0f;
+
+	// ensure cursor is visible (if requested)
+	if (ensureCursorIsVisible) {
+		auto cursor = cursors.getCurrent().getInteractiveEnd();
+
+		if (cursor.line <= firstVisibleLine + 1) {
+			scrollY = std::max(0.0f, (cursor.line - 2.0f) * glyphSize.y);
+
+		} else if (cursor.line >= lastVisibleLine - 1) {
+			scrollY = std::max(0.0f, (cursor.line + 2.0f) * glyphSize.y - visibleHeight);
+		}
+
+		if (cursor.column <= firstVisibleColumn + 1) {
+			scrollX = std::max(0.0f, (cursor.column - 2.0f) * glyphSize.x);
+
+		} else if (cursor.column >= lastVisibleColumn - 1) {
+			scrollX = std::max(0.0f, (cursor.column + 2.0f) * glyphSize.x - visibleWidth);
+		}
+
+		ensureCursorIsVisible = false;
+	}
+
+	// scroll to specified line (if required)
+	if (scrollToLineNumber >= 0) {
+		scrollToLineNumber = std::min(scrollToLineNumber, document.lineCount());
+		scrollX = 0.0f;
+
+		switch (scrollToAlignment) {
+			case Scroll::alignTop:
+				scrollY = std::max(0.0f, static_cast<float>(scrollToLineNumber) * glyphSize.y);
+				break;
+
+			case Scroll::alignMiddle:
+				scrollY = std::max(0.0f, static_cast<float>(scrollToLineNumber - visibleLines / 2) * glyphSize.y);
+				break;
+
+			case Scroll::alignBottom:
+				scrollY = std::max(0.0f, static_cast<float>(scrollToLineNumber - (visibleLines - 1)) * glyphSize.y);
+				break;
+		}
+
+		scrollToLineNumber = -1;
+	}
+
 	// set style
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertU32ToFloat4(palette.get(Color::background)));
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
@@ -81,9 +154,14 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 		focusOnEditor = false;
 	}
 
+	// set scroll (if required)
+	if (scrollX >= 0.0f || scrollY >= 0.0f) {
+		ImGui::SetNextWindowScroll(ImVec2(scrollX, scrollY));
+	}
+
 	// start a new child window
 	// this must be done before we handle keyboard and mouse interactions to ensure correct ImGui context
-	ImGui::SetNextWindowContentSize(ImVec2(textOffset + document.getMaxColumn() * glyphSize.x + cursorWidth, document.lineCount() * glyphSize.y));
+	ImGui::SetNextWindowContentSize(totalSize);
 	ImGui::BeginChild(title, size, border, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoNavInputs);
 
 	// handle keyboard and mouse inputs
@@ -120,61 +198,11 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 	showMatchingBracketsChanged = false;
 	languageChanged = false;
 
-	// ensure cursor is visible (if requested)
-	if (ensureCursorIsVisible) {
-		auto cursor = cursors.getCurrent().getInteractiveEnd();
-
-		if (cursor.line <= firstVisibleLine + 1) {
-			ImGui::SetScrollY(std::max(0.0f, (cursor.line - 2.0f) * glyphSize.y));
-
-		} else if (cursor.line >= lastVisibleLine - 1) {
-			ImGui::SetScrollY(std::max(0.0f, (cursor.line + 2.0f) * glyphSize.y - visibleHeight));
-		}
-
-		if (cursor.column <= firstVisibleColumn + 1) {
-			ImGui::SetScrollX(std::max(0.0f, (cursor.column - 2.0f) * glyphSize.x));
-
-		} else if (cursor.column >= lastVisibleColumn - 1) {
-			ImGui::SetScrollX(std::max(0.0f, (cursor.column + 2.0f) * glyphSize.x - visibleWidth));
-		}
-
-		ensureCursorIsVisible = false;
-	}
-
-	// scroll to specified line (if required)
-	if (scrollToLineNumber >= 0) {
-		scrollToLineNumber = std::min(scrollToLineNumber, document.lineCount());
-		ImGui::SetScrollX(0.0f);
-
-		switch (scrollToAlignment) {
-			case Scroll::alignTop:
-				ImGui::SetScrollY(std::max(0.0f, static_cast<float>(scrollToLineNumber) * glyphSize.y));
-				break;
-
-			case Scroll::alignMiddle:
-				ImGui::SetScrollY(std::max(0.0f, static_cast<float>(scrollToLineNumber - visibleLines / 2) * glyphSize.y));
-				break;
-
-			case Scroll::alignBottom:
-				ImGui::SetScrollY(std::max(0.0f, static_cast<float>(scrollToLineNumber - (visibleLines - 1)) * glyphSize.y));
-				break;
-		}
-
-		scrollToLineNumber = -1;
-	}
-
 	// determine view parameters
-	float scrollbarSize = ImGui::GetStyle().ScrollbarSize;
-	visibleHeight = ImGui::GetWindowHeight() - ((document.getMaxColumn() >= visibleColumns) ? scrollbarSize : 0.0f);
-	visibleLines = std::max(static_cast<int>(std::ceil(visibleHeight / glyphSize.y)), 0);
-	firstVisibleLine = std::max(static_cast<int>(std::floor(ImGui::GetScrollY() / glyphSize.y)), 0);
-	lastVisibleLine = std::min(static_cast<int>(std::floor((ImGui::GetScrollY() + visibleHeight) / glyphSize.y)), document.lineCount() - 1);
-
-	auto tabSize = document.getTabSize();
-	visibleWidth = ImGui::GetWindowWidth() - textOffset - ((document.lineCount() >= visibleLines) ? scrollbarSize : 0.0f);
-	visibleColumns = std::max(static_cast<int>(std::ceil(visibleWidth / glyphSize.x)), 0);
 	firstVisibleColumn = std::max(static_cast<int>(std::floor(ImGui::GetScrollX() / glyphSize.x)), 0);
 	lastVisibleColumn = static_cast<int>(std::floor((ImGui::GetScrollX() + visibleWidth) / glyphSize.x));
+	firstVisibleLine = std::max(static_cast<int>(std::floor(ImGui::GetScrollY() / glyphSize.y)), 0);
+	lastVisibleLine = std::min(static_cast<int>(std::floor((ImGui::GetScrollY() + visibleHeight) / glyphSize.y)), document.lineCount() - 1);
 
 	// render editor parts
 	renderSelections();
@@ -201,7 +229,7 @@ void TextEditor::render(const char* title, const ImVec2& size, bool border) {
 	ImGui::PopStyleColor();
 
 	// render find/replace popup
-	renderFindReplace(pos, available);
+	renderFindReplace(pos, visibleSize);
 }
 
 
@@ -557,7 +585,7 @@ static bool inputString(const char* label, std::string* value, ImGuiInputTextFla
 //	TextEditor::renderFindReplace
 //
 
-void TextEditor::renderFindReplace(ImVec2 pos, ImVec2 available) {
+void TextEditor::renderFindReplace(ImVec2 pos, ImVec2 contentSize) {
 	// render find/replace window (if required)
 	if (findReplaceVisible) {
 		// calculate sizes
@@ -584,7 +612,7 @@ void TextEditor::renderFindReplace(ImVec2 pos, ImVec2 available) {
 
 		// create window
 		ImGui::SetCursorPos(ImVec2(
-			pos.x + available.x - windowWidth - style.ScrollbarSize - style.ItemSpacing.x,
+			pos.x + contentSize.x - windowWidth - style.ScrollbarSize - style.ItemSpacing.x,
 			pos.y + style.ItemSpacing.y * 2.0f));
 
 		ImGui::SetNextWindowBgAlpha(0.6f);
