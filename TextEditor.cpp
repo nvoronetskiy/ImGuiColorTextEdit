@@ -28,7 +28,7 @@
 void TextEditor::setText(const std::string_view &text) {
 	// load text into document and reset subsystems
 	document.setText(text);
-	transactions.clear();
+	transactions.reset();
 	bracketeer.reset();
 	cursors.clearAll();
 	makeCursorVisible();
@@ -3118,6 +3118,16 @@ TextEditor::Coordinate TextEditor::Document::normalizeCoordinate(Coordinate coor
 	}
 
 	return Coordinate(result.line, getColumn(result.line, getIndex(result)));
+}
+
+
+//
+//	TextEditor::Transactions::reset
+//
+
+void TextEditor::Transactions::reset() {
+	clear();
+	undoIndex = 0;
 }
 
 
