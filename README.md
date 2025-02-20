@@ -86,6 +86,7 @@ Dear ImGui context by doing the following:
 - Call the TextEditor's Render member function every frame in your Dear ImGui loop.
 - If you plan to use non-ASCII characters in your text, see the Unicode section below.
 - Configure Dear ImGui's clipboard functions since that is what this editor uses.
+- For a complete example, please see the [example folder](example/README.md);
 
 ## Default Keyboard and Mouse Mappings
 

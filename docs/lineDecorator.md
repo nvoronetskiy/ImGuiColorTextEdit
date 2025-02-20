@@ -30,7 +30,7 @@ editor.SetLineDecorator(41.0f, [](TextEditor::Decorator& decorator) {
 		auto drawlist = ImGui::GetWindowDrawList();
 
 		drawlist->AddCircleFilled(
-			ImVec2(pos.x + size * 0.5, pos.y + size * 0.5f),
+			ImVec2(pos.x + size * 0.5f, pos.y + size * 0.5f),
 			(size - 6.0f) * 0.5f,
 			IM_COL32(128, 0, 0, 255));
 
