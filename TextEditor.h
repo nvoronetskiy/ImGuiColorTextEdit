@@ -69,6 +69,9 @@ public:
 	// render the text editor in a Dear ImGui context
 	inline void Render(const char* title, const ImVec2& size=ImVec2(), bool border=false) { render(title, size, border); }
 
+	// programmatically set focus on the editor
+	inline void SetFocus() { focusOnEditor = true; }
+
 	// clipboard actions
 	inline void Cut() { if (!readOnly) cut(); }
 	inline void Copy() const { copy(); }
@@ -84,6 +87,10 @@ public:
 	inline void SelectAll() { selectAll(); }
 	inline void SelectLine(int line) { if (line >= 0 && line < document.lineCount()) selectLine(line); }
 	inline void SelectLines(int start, int end) { if (start >= 0 && end < document.lineCount() && start <= end) selectLines(start, end); }
+	inline void SelectRegion(int startLine, int startColumn, int endLine, int endColumn) { selectRegion(startLine, startColumn, endLine, endColumn); }
+	inline void SelectToBrackets(bool includeBrackets=true) { selectToBrackets(includeBrackets); }
+	inline void GrowSelectionsToCurlyBrackets(bool includeBrackets=true) { growSelectionsToCurlyBrackets(includeBrackets); }
+	inline void ShrinkSelectionsToCurlyBrackets(bool includeBrackets=true) { growSelectionsToCurlyBrackets(includeBrackets); }
 	inline void AddNextOccurrence() { addNextOccurrence(); }
 	inline void SelectAllOccurrences() { selectAllOccurrences(); }
 	inline bool AnyCursorHasSelection() const { return cursors.anyHasSelection(); }
@@ -461,6 +468,9 @@ private:
 		// constructor
 		Cursors() { clearAll(); }
 
+		// reset the cursors
+		void reset();
+
 		// erase all cursors and specify a new one
 		inline void setCursor(Coordinate coordinate) { setCursor(coordinate, coordinate); }
 		void setCursor(Coordinate start, Coordinate end);
@@ -571,6 +581,7 @@ private:
 		std::string getText() const;
 		std::string getSectionText(Coordinate start, Coordinate end) const;
 		std::string getLineText(int line) const;
+		ImWchar getCodePoint(Coordinate location);
 
 		// get number of lines (as an int)
 		inline int lineCount() const { return static_cast<int>(size()); }
@@ -706,9 +717,9 @@ private:
 	} colorizer;
 
 	// details about bracketed text
-	class Bracket {
+	class BracketPair {
 	public:
-		Bracket(ImWchar sc, Coordinate s, ImWchar ec, Coordinate e, int l) : startChar(sc), start(s), endChar(ec), end(e), level(l) {}
+		BracketPair(ImWchar sc, Coordinate s, ImWchar ec, Coordinate e, int l) : startChar(sc), start(s), endChar(ec), end(e), level(l) {}
 		ImWchar startChar;
 		Coordinate start;
 		ImWchar endChar;
@@ -716,10 +727,10 @@ private:
 		int level;
 
 		inline bool isAfter(Coordinate location) const { return start > location; }
-		inline bool isAround(Coordinate location) const { return start <= location && end >= location; }
+		inline bool isAround(Coordinate location) const { return start < location && end >= location; }
 	};
 
-	class Bracketeer : public std::vector<Bracket> {
+	class Bracketeer : public std::vector<BracketPair> {
 	public:
 		// reset the bracketeer
 		void reset();
@@ -727,10 +738,11 @@ private:
 		// update the list of bracket pairs in the document and colorize the relevant glyphs
 		void update(Document& document);
 
-		// manage active brackets
-		iterator getActiveBracket(Coordinate location);
+		// find relevant brackets
+		iterator getEnclosingBrackets(Coordinate location);
+		iterator getEnclosingCurlyBrackets(Coordinate location);
+		iterator getInnerCurlyBrackets(Coordinate location);
 
-	private:
 		// utility functions
 		static inline bool isBracketCandidate(Glyph& glyph) {
 			return glyph.color == Color::punctuation ||
@@ -744,9 +756,6 @@ private:
 		static inline bool isBracketCloser(ImWchar ch) { return ch == '}' || ch == ']' || ch == ')'; }
 		static inline ImWchar toBracketCloser(ImWchar ch) { return ch == '{' ? '}' : (ch == '[' ? ']' : (ch == '(' ? ')' : ch)); }
 		static inline ImWchar toBracketOpener(ImWchar ch) { return ch == '}' ? '{' : (ch == ']' ? '[' : (ch == ')' ? '(' : ch)); }
-
-		int active = -1;
-		Coordinate activeLocation = Coordinate::invalid();
 	} bracketeer;
 
 	// set the editor's text
@@ -772,8 +781,11 @@ private:
 	void selectAll();
 	void selectLine(int line);
 	void selectLines(int startLine, int endLine);
+	void selectRegion(int startLine, int startColumn, int endLine, int endColumn);
+	void selectToBrackets(bool includeBrackets);
+	void growSelectionsToCurlyBrackets(bool includeBrackets);
+	void shrinkSelectionsToCurlyBrackets(bool includeBrackets);
 
-	// clipboard actions
 	void cut();
 	void copy() const;
 	void paste();

@@ -525,6 +525,7 @@ void Editor::renderConfirmClose() {
 	}
 }
 
+
 //
 //	Editor::renderConfirmQuit
 //

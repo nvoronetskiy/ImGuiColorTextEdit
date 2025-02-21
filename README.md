@@ -86,7 +86,7 @@ Dear ImGui context by doing the following:
 - Call the TextEditor's Render member function every frame in your Dear ImGui loop.
 - If you plan to use non-ASCII characters in your text, see the Unicode section below.
 - Configure Dear ImGui's clipboard functions since that is what this editor uses.
-- For a complete example, please see the [example folder](example/README.md);
+- For a complete example, please see the [example folder](example/);
 
 ## Default Keyboard and Mouse Mappings
 
@@ -103,7 +103,8 @@ Dear ImGui context by doing the following:
 	- Ctrl-UpArrow and Ctrl-DownArrow move to the start/end of the document.
 	- Home and End keys move to the start/end of the line.
 	- Holding down the Shift key extends the current selection(s).
-	- Holding down the Alt key with the left or right arrow moves a whole word.
+	- Holding down the Alt key with the left or right arrow moves a whole word on MacOS.
+	- Holding down the Ctrl key with the left or right arrow moves a whole word on Linux and Windows.
 
 - Cursors and selections:
 	- Alt with single left mouse click creates a new cursor on MacOS.

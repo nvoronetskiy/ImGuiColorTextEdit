@@ -340,7 +340,7 @@ void TextEditor::renderMatchingBrackets() {
 			}
 
 			// render active bracket pair
-			auto active = bracketeer.getActiveBracket(cursors.getMain().getInteractiveEnd());
+			auto active = bracketeer.getEnclosingBrackets(cursors.getMain().getInteractiveEnd());
 
 			if (active != bracketeer.end() &&
 				active->start.line <= lastVisibleLine &&
@@ -742,13 +742,33 @@ void TextEditor::handleKeyboardInputs() {
 		auto isShiftOnly = !ctrl && shift && !alt;
 		auto isOptionalShift = !ctrl && !alt;
 		auto isOptionalAlt = !ctrl && !shift;
+
+#if __APPLE__
+		// Dear ImGui switches the Cmd(Super) and Ctrl keys on MacOS
+		auto super = ImGui::IsKeyDown(ImGuiMod_Super);
+		auto isCtrlShift = !ctrl && shift && !alt && super;
 		auto isOptionalAltShift = !ctrl;
+	#else
+		auto isShiftAlt = !ctrl && shift && alt;
+		auto isOptionalCtrlShift = !alt;
+	#endif
 
 		// cursor movements and selections
 		if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_UpArrow)) { moveUp(1, shift); }
 		else if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_DownArrow)) { moveDown(1, shift); }
+
+#if __APPLE__
+		else if (isCtrlShift && ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) { shrinkSelectionsToCurlyBrackets(true); }
+		else if (isCtrlShift && ImGui::IsKeyPressed(ImGuiKey_RightArrow)) { growSelectionsToCurlyBrackets(true); }
 		else if (isOptionalAltShift && ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) { moveLeft(shift, alt); }
 		else if (isOptionalAltShift && ImGui::IsKeyPressed(ImGuiKey_RightArrow)) { moveRight(shift, alt); }
+#else
+		else if (isShiftAlt && ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) { shrinkSelectionsToCurlyBrackets(true); }
+		else if (isShiftAlt && ImGui::IsKeyPressed(ImGuiKey_RightArrow)) { growSelectionsToCurlyBrackets(true); }
+		else if (isOptionalCtrlShift && ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) { moveLeft(shift, ctrl); }
+		else if (isOptionalCtrlShift && ImGui::IsKeyPressed(ImGuiKey_RightArrow)) { moveRight(shift, ctrl); }
+#endif
+
 		else if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_PageUp)) { moveUp(visibleLines - 2, shift); }
 		else if (isOptionalShift && ImGui::IsKeyPressed(ImGuiKey_PageDown)) { moveDown(visibleLines - 2, shift); }
 		else if (isOptionalShiftShortcut && ImGui::IsKeyPressed(ImGuiKey_UpArrow)) { moveToTop(shift); }
@@ -907,9 +927,33 @@ void TextEditor::handleMouseInteractions() {
 			} else if (doubleClick) {
 				// left mouse button double click
 				if (overText) {
-					auto start = document.findWordStart(mouseCoord);
-					auto end = document.findWordEnd(mouseCoord);
-					cursors.updateCurrentCursor(start, end);
+					auto codepoint = document.getCodePoint(mouseCoord);
+					bool handled = false;
+
+					// select block (if required)
+					if (Bracketeer::isBracketOpener(codepoint)) {
+						auto brackets = bracketeer.getEnclosingBrackets(document.getRight(mouseCoord));
+
+						if (brackets != bracketeer.end()) {
+							cursors.setCursor(brackets->start, document.getRight(brackets->end));
+							handled = true;
+						}
+
+					} else if (Bracketeer::isBracketCloser(codepoint)) {
+						auto brackets = bracketeer.getEnclosingBrackets(document.getLeft(mouseCoord));
+
+						if (brackets != bracketeer.end()) {
+							cursors.setCursor(brackets->start, document.getRight(brackets->end));
+							handled = true;
+						}
+					}
+
+					// select word if it wasn't a block
+					if (!handled) {
+						auto start = document.findWordStart(mouseCoord);
+						auto end = document.findWordEnd(mouseCoord);
+						cursors.updateCurrentCursor(start, end);
+					}
 				}
 
 			} else if (click) {
@@ -989,6 +1033,102 @@ void TextEditor::selectLines(int startLine, int endLine) {
 	Coordinate start{startLine, 0};
 	moveTo(start, false);
 	moveTo(document.getDown(start, endLine - startLine + 1), true);
+}
+
+
+//
+//	TextEditor::selectRegion
+//
+
+void TextEditor::selectRegion(int startLine, int startColumn, int endLine, int endColumn) {
+	auto start = document.normalizeCoordinate(Coordinate(startLine, startColumn));
+	auto end = document.normalizeCoordinate(Coordinate(endLine, endColumn));
+
+	if (end < start) {
+		std::swap(start, end);
+	}
+
+	cursors.setCursor(start, end);
+}
+
+
+//
+//	TextEditor::selectToBrackets
+//
+
+void TextEditor::selectToBrackets(bool includeBrackets) {
+	if (!showMatchingBrackets) {
+		bracketeer.update(document);
+	}
+
+	for (auto& cursor : cursors) {
+		auto bracket = bracketeer.getEnclosingBrackets(cursor.getSelectionStart());
+
+		if (bracket != bracketeer.end()) {
+			if (includeBrackets) {
+				cursor.update(bracket->start, document.getRight(bracket->end));
+
+			} else {
+				cursor.update(document.getRight(bracket->start), bracket->end);
+			}
+		}
+	}
+}
+
+
+//
+//	TextEditor::growSelectionsToCurlyBrackets
+//
+
+void TextEditor::growSelectionsToCurlyBrackets(bool includeBrackets) {
+	if (!showMatchingBrackets) {
+		bracketeer.update(document);
+	}
+
+	for (auto& cursor : cursors) {
+		auto bracket = bracketeer.getEnclosingCurlyBrackets(cursor.getSelectionStart());
+
+		if (bracket != bracketeer.end()) {
+			if (includeBrackets) {
+				cursor.update(bracket->start, document.getRight(bracket->end));
+
+			} else {
+				cursor.update(document.getRight(bracket->start), bracket->end);
+			}
+		}
+	}
+}
+
+
+//
+//	TextEditor::shrinkSelectionsToCurlyBrackets
+//
+
+void TextEditor::shrinkSelectionsToCurlyBrackets(bool includeBrackets) {
+	if (!showMatchingBrackets) {
+		bracketeer.update(document);
+	}
+
+	for (auto& cursor : cursors) {
+		if (cursor.hasSelection()){
+			auto start = cursor.getSelectionStart();
+
+			if (document.getCodePoint(start) == '{') {
+				start = document.getRight(start);
+			}
+
+			auto bracket = bracketeer.getInnerCurlyBrackets(start);
+
+			if (bracket != bracketeer.end()) {
+				if (includeBrackets) {
+					cursor.update(bracket->start, document.getRight(bracket->end));
+
+				} else {
+					cursor.update(document.getRight(bracket->start), bracket->end);
+				}
+			}
+		}
+	}
 }
 
 
@@ -2337,16 +2477,25 @@ void TextEditor::Cursor::adjustForDelete(Coordinate deleteStart, Coordinate dele
 
 
 //
+//	TextEditor::Cursors::reset
+//
+
+void TextEditor::Cursors::reset() {
+	clear();
+	main = 0;
+	current = 0;
+}
+
+
+//
 //	TextEditor::Cursors::setCursor
 //
 
 void TextEditor::Cursors::setCursor(Coordinate cursorStart, Coordinate cursorEnd) {
-	clear();
+	reset();
 	emplace_back(cursorStart, cursorEnd);
 	front().setMain(true);
 	front().setCurrent(true);
-	main = 0;
-	current = 0;
 }
 
 
@@ -2412,12 +2561,10 @@ bool TextEditor::Cursors::anyHasUpdate() const {
 //
 
 void TextEditor::Cursors::clearAll() {
-	clear();
+	reset();
 	emplace_back(Coordinate(0, 0));
 	front().setMain(true);
 	front().setCurrent(true);
-	main = 0;
-	current = 0;
 }
 
 
@@ -2729,6 +2876,22 @@ std::string TextEditor::Document::getSectionText(Coordinate start, Coordinate en
 
 std::string TextEditor::Document::getLineText(int line) const {
 	return getSectionText(Coordinate(line, 0), Coordinate(line, at(line).maxColumn));
+}
+
+
+//
+//	TextEditor::Document::getCodePoint
+//
+
+ImWchar TextEditor::Document::getCodePoint(Coordinate location) {
+	auto index = getIndex(location);
+
+	if (index < at(location.line).size()) {
+		return at(location.line)[index].codepoint;
+
+	} else {
+		return IM_UNICODE_CODEPOINT_INVALID;
+	}
 }
 
 
@@ -3487,8 +3650,6 @@ bool TextEditor::Colorizer::matches(Line::iterator start, Line::iterator end, co
 
 void TextEditor::Bracketeer::reset() {
 	clear();
-	active = -1;
-	activeLocation = Coordinate::invalid();
 }
 
 
@@ -3516,7 +3677,7 @@ void TextEditor::Bracketeer::update(Document& document) {
 			if (isBracketCandidate(glyph) && isBracketOpener(glyph.codepoint)) {
 				// start a new level
 				levels.emplace_back(size());
-				emplace_back(glyph.codepoint, Coordinate(line, document.getColumn(line, index)), 0, Coordinate::invalid(), level);
+				emplace_back(glyph.codepoint, Coordinate(line, document.getColumn(line, index)), static_cast<ImWchar>(0), Coordinate::invalid(), level);
 				glyph.color = bracketColors[level % 3];
 				level++;
 
@@ -3560,30 +3721,75 @@ void TextEditor::Bracketeer::update(Document& document) {
 
 
 //
-//	TextEditor::Bracketeer::getActiveBracket
+//	TextEditor::Bracketeer::getEnclosingCurlyBrackets
 //
 
-TextEditor::Bracketeer::iterator TextEditor::Bracketeer::getActiveBracket(Coordinate location) {
-	if (location != activeLocation) {
-		active = -1;
-		bool done = false;
+TextEditor::Bracketeer::iterator TextEditor::Bracketeer::getEnclosingBrackets(Coordinate location) {
+	iterator brackets = end();
+	bool done = false;
 
-		for (auto i = begin(); !done && i < end(); i++) {
-			// skip pairs that start after specified location
-			if (i->isAfter(location)) {
-				done = true;
-			}
-
-			// brackets are active when they are around specified location
-			else if (i->isAround(location)) {
-				active = static_cast<int>(i - begin());
-			}
+	for (auto i = begin(); !done && i < end(); i++) {
+		// brackets are sorted so no need to go past specified location
+		if (i->isAfter(location)) {
+			done = true;
 		}
 
-		activeLocation = location;
+		else if (i->isAround(location)) {
+			// this could be what we're looking for
+			brackets = i;
+		}
 	}
 
-	return active == -1 ? end() : begin() + active;
+	return brackets;
+}
+
+
+//
+//	TextEditor::Bracketeer::getEnclosingCurlyBrackets
+//
+
+TextEditor::Bracketeer::iterator TextEditor::Bracketeer::getEnclosingCurlyBrackets(Coordinate location) {
+	iterator brackets = end();
+	bool done = false;
+
+	for (auto i = begin(); !done && i < end(); i++) {
+		// brackets are sorted so no need to go past specified location
+		if (i->isAfter(location)) {
+			done = true;
+		}
+
+		else if (i->isAround(location) && i->startChar == '{') {
+			// this could be what we're looking for
+			brackets = i;
+		}
+	}
+
+	return brackets;
+}
+
+
+//
+//	TextEditor::Bracketeer::getInnerCurlyBrackets
+//
+
+TextEditor::Bracketeer::iterator TextEditor::Bracketeer::getInnerCurlyBrackets(Coordinate location) {
+	auto brackets = getEnclosingCurlyBrackets(location);
+
+	if (brackets != end()) {
+		bool done = false;
+
+		for (auto next = brackets + 1; next < end() && !done; next++) {
+			 if (next->level == brackets->level + 1 && next->startChar == '{') {
+				brackets = next;
+				done = true;
+
+			} else if (next->level <= brackets->level) {
+				done = true;
+			 }
+		}
+	}
+
+	return brackets;
 }
 
 
