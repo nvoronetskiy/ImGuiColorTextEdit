@@ -91,7 +91,8 @@ Dear ImGui context by doing the following:
 ## Default Keyboard and Mouse Mappings
 
 - In the mappings listed below, the following modifier keys are used:
-	- Ctrl: this refers to the Command Key on MacOS and the Control key on Linux and Windows.
+	- Super: this refers to the Control key on MacOS (Dear ImGui reverses Command and Control key on that platform).
+	- Ctrl: this refers to the Command key on MacOS and the Control key on Linux and Windows.
 	- Alt: this refers to the Option key on MacOS and the Alt key on Linux and Windows.
 	- Shift: as you would expect on all platforms.
 	- If a keyboard has a left and right version of these modifiers, the meaning is not different.
@@ -111,9 +112,12 @@ Dear ImGui context by doing the following:
 	- Ctrl with single left mouse click creates a new cursor on Linux and Windows.
 	- Ctrl-A select all text.
 	- Ctrl-D creates a new cursor and selects the next instance of the current selection.
-	- Double left mouse clicks select a word. Shift extends current selection.
-	- Triple left mouse clicks select a line. Shift extends current selection.
+	- Double left mouse clicks on a bracket or parenthesis selects the contents including the brackets.
+	- Double left mouse clicks not on a bracket or parenthesis, selects a word. Shift extends current selection.
+	- Triple left mouse clicks selects a line. Shift extends current selection.
 	- Dragging mouse with left mouse button selects text. Shift extends current selection.
+	- Alt-Shift-RightArrow (on MacOS) and Ctrl-Shift-RightArrow (on Linux and Windows) grows the selection to the next codeblock.
+	- Alt-Shift-LeftArrow (on MacOS) and Ctrl-Shift-LeftArrow (on Linux and Windows) shrinks the selection to the next codeblock.
 
 - Clipboard Operations:
 	- Ctrl-X or Shift-Delete cuts selected text or current line if no selection.
