@@ -60,6 +60,7 @@ public:
 	inline bool IsOverwriteEnabled() const { return overwrite; }
 
 	// access text (using UTF-8 encoded strings)
+	// (see note below on cursor and scroll manipulation after setting new text)
 	inline void SetText(const std::string_view& text) { setText(text); }
 	inline std::string GetText() { return document.getText(); }
 	inline bool IsEmpty() const { return document.size() == 1 && document[0].size() == 0; }
@@ -67,6 +68,9 @@ public:
 
 	// render the text editor in a Dear ImGui context
 	inline void Render(const char* title, const ImVec2& size=ImVec2(), bool border=false) { render(title, size, border); }
+
+	// programmatically set focus on the editor
+	inline void SetFocus() { focusOnEditor = true; }
 
 	// clipboard actions
 	inline void Cut() { if (!readOnly) cut(); }
@@ -83,6 +87,10 @@ public:
 	inline void SelectAll() { selectAll(); }
 	inline void SelectLine(int line) { if (line >= 0 && line < document.lineCount()) selectLine(line); }
 	inline void SelectLines(int start, int end) { if (start >= 0 && end < document.lineCount() && start <= end) selectLines(start, end); }
+	inline void SelectRegion(int startLine, int startColumn, int endLine, int endColumn) { selectRegion(startLine, startColumn, endLine, endColumn); }
+	inline void SelectToBrackets(bool includeBrackets=true) { selectToBrackets(includeBrackets); }
+	inline void GrowSelectionsToCurlyBrackets(bool includeBrackets=true) { growSelectionsToCurlyBrackets(includeBrackets); }
+	inline void ShrinkSelectionsToCurlyBrackets(bool includeBrackets=true) { growSelectionsToCurlyBrackets(includeBrackets); }
 	inline void AddNextOccurrence() { addNextOccurrence(); }
 	inline void SelectAllOccurrences() { selectAllOccurrences(); }
 	inline bool AnyCursorHasSelection() const { return cursors.anyHasSelection(); }
@@ -109,8 +117,24 @@ public:
 	inline int GetFirstVisibleColumn() const { return firstVisibleColumn; }
 	inline int GetLastVisibleColumn() const { return lastVisibleColumn; }
 
-	inline int GetLineHeight() const { return glyphSize.y; }
-	inline int GetGlyphWidth() const { return glyphSize.x; }
+	inline float GetLineHeight() const { return glyphSize.y; }
+	inline float GetGlyphWidth() const { return glyphSize.x; }
+
+	// note on setting cursor and scrolling
+	//
+	// calling SetCursor or ScrollToLine has no effect until the next call to Render
+	// this is because we can only do layout calculations when we are in a Dear ImGui drawing context
+	// as a result, SetCursor or ScrollToLine just mark the request and let Render execute it
+	//
+	// the order of the calls is therefore important as they can interfere with each other
+	// so if you call SetText, SetCursor and/or ScrollToLine before Render, the order should be:
+	//
+	// * call SetText first as it resets the entire editor state including cursors and scrolling
+	// * then call SetCursor as it sets the cursor and requests that we make the cursor visible (i.e. scroll to it)
+	// * then call ScrollToLine to mark the exact scroll location (it cancels the possible SetCursor scroll request)
+	// * call Render to properly update the entire state
+	//
+	// this works on opening the editor as well as later
 
 	// find/replace support
 	inline void SelectFirstOccurrenceOf(const std::string_view& text, bool caseSensitive=true, bool wholeWord=false) { selectFirstOccurrenceOf(text, caseSensitive, wholeWord); }
@@ -120,6 +144,10 @@ public:
 	inline void ReplaceTextInAllCursors(const std::string_view& text) { if (!readOnly) replaceTextInAllCursors(text); }
 
 	inline void OpenFindReplaceWindow() { findReplaceVisible = true; focusOnFind = true; }
+	inline void SetFindButtonLabel(const std::string_view& label) { findButtonLabel = label; }
+	inline void SetFindAllButtonLabel(const std::string_view& label) { findAllButtonLabel = label; }
+	inline void SetReplaceButtonLabel(const std::string_view& label) { replaceButtonLabel = label; }
+	inline void SetReplaceAllButtonLabel(const std::string_view& label) { replaceAllButtonLabel = label; }
 	inline bool HasFindString() const { return findText.size(); }
 	inline void FindNext() { findNext(); }
 	inline void FindAll() { findAll(); }
@@ -205,7 +233,7 @@ public:
 		inline ImU32 get(Color color) const { return at(static_cast<size_t>(color)); }
 	};
 
-	inline void SetPalette(const Palette& palette) { paletteBase = palette; paletteAlpha = -1.0f; }
+	inline void SetPalette(const Palette& newPalette) { paletteBase = newPalette; paletteAlpha = -1.0f; }
 	inline const Palette& GetPalette() const { return paletteBase; }
 
 	static const Palette& GetDarkPalette();
@@ -421,8 +449,8 @@ private:
 
 	private:
 		// helper functions
-		Coordinate adjustCoordinateForInsert(Coordinate coordinate, Coordinate start, Coordinate end);
-		Coordinate adjustCoordinateForDelete(Coordinate coordinate, Coordinate start, Coordinate end);
+		Coordinate adjustCoordinateForInsert(Coordinate coordinate, Coordinate insertStart, Coordinate insertEnd);
+		Coordinate adjustCoordinateForDelete(Coordinate coordinate, Coordinate deleteStart, Coordinate deleteEnd);
 
 		// properties
 		Coordinate start{0, 0};
@@ -438,13 +466,16 @@ private:
 		// constructor
 		Cursors() { clearAll(); }
 
+		// reset the cursors
+		void reset();
+
 		// erase all cursors and specify a new one
 		inline void setCursor(Coordinate coordinate) { setCursor(coordinate, coordinate); }
 		void setCursor(Coordinate start, Coordinate end);
 
 		// add a cursor to the list
 		inline void addCursor(Coordinate c) { addCursor(c, c); }
-		void addCursor(Coordinate start, Coordinate end);
+		void addCursor(Coordinate cursorStart, Coordinate cursorEnd);
 
 		// update the current cursor (the one last added)
 		inline void updateCurrentCursor(Coordinate coordinate) { at(current).update(coordinate); }
@@ -516,9 +547,6 @@ private:
 	// a single line in a document
 	class Line : public std::vector<Glyph> {
 	public:
-		// get number of glyphs (as an int)
-		inline int glyphCount() const { return static_cast<int>(size()); }
-
 		// state at start of line
 		State state = State::inText;
 
@@ -551,6 +579,7 @@ private:
 		std::string getText() const;
 		std::string getSectionText(Coordinate start, Coordinate end) const;
 		std::string getLineText(int line) const;
+		ImWchar getCodePoint(Coordinate location);
 
 		// get number of lines (as an int)
 		inline int lineCount() const { return static_cast<int>(size()); }
@@ -560,10 +589,10 @@ private:
 		inline int getMaxColumn() const { return maxColumn; }
 
 		// translate visible column to line index (and visa versa)
-		int getIndex(const Line& line, int column) const;
-		inline int getIndex(Coordinate coordinate) const { return getIndex(at(coordinate.line), coordinate.column); }
-		int getColumn(const Line& line, int index) const;
-		inline int getColumn(int line, int index) const { return getColumn(at(line), index); }
+		size_t getIndex(const Line& line, int column) const;
+		inline size_t getIndex(Coordinate coordinate) const { return getIndex(at(coordinate.line), coordinate.column); }
+		int getColumn(const Line& line, size_t index) const;
+		inline int getColumn(int line, size_t index) const { return getColumn(at(line), index); }
 
 		// coordinate operations in context of document
 		Coordinate getUp(Coordinate from, int lines=1) const;
@@ -586,7 +615,7 @@ private:
 
 		// utility functions
 		bool isWholeWord(Coordinate start, Coordinate end) const;
-		inline bool isEndOfLine(Coordinate from) const { return getIndex(from) == at(from.line).glyphCount(); }
+		inline bool isEndOfLine(Coordinate from) const { return getIndex(from) == at(from.line).size(); }
 		inline bool isLastLine(int line) const { return line == lineCount() - 1; }
 		Coordinate normalizeCoordinate(Coordinate coordinate) const;
 
@@ -641,6 +670,9 @@ private:
 	// transaction list to support do/undo/redo
  	class Transactions : public std::vector<std::shared_ptr<Transaction>> {
 	public:
+		// reset the transactions
+		void reset();
+
 		// create a new transaction
 		static inline std::shared_ptr<Transaction> create() { return std::make_shared<Transaction>(); }
 
@@ -683,9 +715,9 @@ private:
 	} colorizer;
 
 	// details about bracketed text
-	class Bracket {
+	class BracketPair {
 	public:
-		Bracket(ImWchar sc, Coordinate s, ImWchar ec, Coordinate e, int l) : startChar(sc), start(s), endChar(ec), end(e), level(l) {}
+		BracketPair(ImWchar sc, Coordinate s, ImWchar ec, Coordinate e, int l) : startChar(sc), start(s), endChar(ec), end(e), level(l) {}
 		ImWchar startChar;
 		Coordinate start;
 		ImWchar endChar;
@@ -693,10 +725,10 @@ private:
 		int level;
 
 		inline bool isAfter(Coordinate location) const { return start > location; }
-		inline bool isAround(Coordinate location) const { return start <= location && end >= location; }
+		inline bool isAround(Coordinate location) const { return start < location && end >= location; }
 	};
 
-	class Bracketeer : public std::vector<Bracket> {
+	class Bracketeer : public std::vector<BracketPair> {
 	public:
 		// reset the bracketeer
 		void reset();
@@ -704,10 +736,11 @@ private:
 		// update the list of bracket pairs in the document and colorize the relevant glyphs
 		void update(Document& document);
 
-		// manage active brackets
-		iterator getActiveBracket(Coordinate location);
+		// find relevant brackets
+		iterator getEnclosingBrackets(Coordinate location);
+		iterator getEnclosingCurlyBrackets(Coordinate location);
+		iterator getInnerCurlyBrackets(Coordinate location);
 
-	private:
 		// utility functions
 		static inline bool isBracketCandidate(Glyph& glyph) {
 			return glyph.color == Color::punctuation ||
@@ -721,9 +754,6 @@ private:
 		static inline bool isBracketCloser(ImWchar ch) { return ch == '}' || ch == ']' || ch == ')'; }
 		static inline ImWchar toBracketCloser(ImWchar ch) { return ch == '{' ? '}' : (ch == '[' ? ']' : (ch == '(' ? ')' : ch)); }
 		static inline ImWchar toBracketOpener(ImWchar ch) { return ch == '}' ? '{' : (ch == ']' ? '[' : (ch == ')' ? '(' : ch)); }
-
-		int active = -1;
-		Coordinate activeLocation = Coordinate::invalid();
 	} bracketeer;
 
 	// set the editor's text
@@ -749,8 +779,11 @@ private:
 	void selectAll();
 	void selectLine(int line);
 	void selectLines(int startLine, int endLine);
+	void selectRegion(int startLine, int startColumn, int endLine, int endColumn);
+	void selectToBrackets(bool includeBrackets);
+	void growSelectionsToCurlyBrackets(bool includeBrackets);
+	void shrinkSelectionsToCurlyBrackets(bool includeBrackets);
 
-	// clipboard actions
 	void cut();
 	void copy() const;
 	void paste();
@@ -761,6 +794,7 @@ private:
 	void getCursor(int& line, int& column, size_t cursor) const;
 
 	// scrolling support
+	void makeCursorVisible();
 	void scrollToLine(int line, Scroll alignment);
 
 	// find/replace support
@@ -881,6 +915,10 @@ private:
 	static constexpr int cursorWidth = 1;
 
 	// find and replace support
+	std::string findButtonLabel = "Find";
+	std::string findAllButtonLabel = "Find All";
+	std::string replaceButtonLabel = "Replace";
+	std::string replaceAllButtonLabel = "Replace All";
 	bool findReplaceVisible = false;
 	bool focusOnEditor = true;
 	bool focusOnFind = false;
