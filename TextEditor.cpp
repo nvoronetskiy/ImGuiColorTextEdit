@@ -2694,23 +2694,35 @@ std::string TextEditor::Document::getLineText(int line) const {
 //	TextEditor::Document::updateMaximumColumn
 //
 
-void TextEditor::Document::updateMaximumColumn(int first, int last) {
+void TextEditor::Document::updateMaximumColumn(int first, int last)
+{
 	// process specified lines
-	for (auto line = begin() + first; line <= begin() + last; line++) {
-		// determine the maximum column number for this line
-		int column = 0;
+	int sz = (int)size();
+	first  = std::clamp(first, 0, sz);
+	last   = std::clamp(last, 0, sz);
 
-		for (auto glyph = line->begin(); glyph < line->end(); glyph++) {
-			column = (glyph->codepoint == '\t') ? ((column / tabSize) + 1) * tabSize : column + 1;
+	if (!empty())
+	{
+        auto b = begin() + first;
+        auto e = begin() + last;
+		for (auto line = b; line != e; ++line)
+		{
+			// determine the maximum column number for this line
+			int column = 0;
+			for (auto glyph = line->begin(); glyph != line->end(); ++glyph)
+			{
+				column = (glyph->codepoint == '\t') ? ((column / tabSize) + 1) * tabSize : column + 1;
+			}
+
+			line->maxColumn = column;
 		}
-
-		line->maxColumn = column;
 	}
 
 	// determine maximum line number in document
 	maxColumn = 0;
 
-	for (auto line = begin(); line < end(); line++) {
+	for (auto line = begin(); line < end(); line++)
+	{
 		maxColumn = std::max(maxColumn, line->maxColumn);
 	}
 }
