@@ -19,10 +19,8 @@ add_executable(example
 	editor.cpp
 	main.cpp)
 
-	target_link_libraries(example SDL3::SDL3 SDL3_Headers imguifd)
+target_link_libraries(example SDL3::SDL3 SDL3_Headers imguifd)
 
 target_compile_options(example PRIVATE
-$<$<COMPILE_LANG_AND_ID:CXX,AppleClang,Clang,GNU>:-Wall>
-$<$<COMPILE_LANG_AND_ID:CXX,AppleClang,Clang,GNU>:-Wpedantic>
-$<$<COMPILE_LANG_AND_ID:CXX,AppleClang,Clang,GNU>:-Wextra>
-$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/W4>)
+	$<$<COMPILE_LANG_AND_ID:CXX,AppleClang,Clang,GNU>:-Werror -Wall -Wpedantic -Wextra>
+	$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/W4 /WX>)
