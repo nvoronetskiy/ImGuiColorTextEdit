@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   verify-windows:
-    runs-on: windows-latest
+    runs-on: windows-2025
 
     steps:
     - name: Checkout Repository
