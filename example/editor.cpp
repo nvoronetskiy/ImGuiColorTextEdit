@@ -244,8 +244,8 @@ void Editor::renderMenubar() {
 
 			if (ImGui::MenuItem("Indent Line(s)", " " SHORTCUT "]", nullptr, !editor.IsEmpty())) { editor.IndentLines(); }
 			if (ImGui::MenuItem("Deindent Line(s)", " " SHORTCUT "[", nullptr, !editor.IsEmpty())) { editor.DeindentLines(); }
-			if (ImGui::MenuItem("Move Line(s) Up", " " SHORTCUT "\u2191", nullptr, !editor.IsEmpty())) { editor.MoveUpLines(); }
-			if (ImGui::MenuItem("Move Line(s) Down", " " SHORTCUT "\u2193", nullptr, !editor.IsEmpty())) { editor.MoveDownLines(); }
+			if (ImGui::MenuItem("Move Line(s) Up", nullptr, nullptr, !editor.IsEmpty())) { editor.MoveUpLines(); }
+			if (ImGui::MenuItem("Move Line(s) Down", nullptr, nullptr, !editor.IsEmpty())) { editor.MoveDownLines(); }
 			if (ImGui::MenuItem("Toggle Comments", " " SHORTCUT "/", nullptr, editor.HasLanguage())) { editor.ToggleComments(); }
 			ImGui::Separator();
 
