@@ -368,6 +368,7 @@ public:
 		static const Language* Lua();
 		static const Language* Python();
 		static const Language* Glsl();
+		static const Language* SQL();
 		static const Language* Hlsl();
 		static const Language* Json();
 		static const Language* Markdown();
