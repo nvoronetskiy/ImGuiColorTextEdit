@@ -296,7 +296,7 @@ void Editor::renderMenubar() {
 
 void Editor::renderStatusbar() {
 	// language support
-	static const char* languages[] = {"C", "C++", "Cs", "AngelScript", "Lua", "Python", "GLSL", "HLSL",  "JSON", "Markdown"};
+	static const char* languages[] = {"C", "C++", "Cs", "AngelScript", "Lua", "Python", "GLSL", "HLSL",  "JSON", "Markdown", "SQL"};
 
 	static const TextEditor::Language* definitions[] = {
 		TextEditor::Language::C(),
@@ -308,7 +308,8 @@ void Editor::renderStatusbar() {
 		TextEditor::Language::Glsl(),
 		TextEditor::Language::Hlsl(),
 		TextEditor::Language::Json(),
-		TextEditor::Language::Markdown()
+		TextEditor::Language::Markdown(),
+		TextEditor::Language::Sql()
 	};
 
 	std::string language = editor.GetLanguageName();
