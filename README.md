@@ -72,7 +72,7 @@ public API to externally implement these features is however included.
 - Provides auto completion for paired glyphs (\[, \{, \(, \", \') (can be turned on and off).
 - If auto complete is turned on, accidentally typed closing glyphs are ignored.
 - If auto complete is turned on, selections can be surrounded by paired glyphs.
-- Supports blinking cursor (can be turned on/off using ImGui's global io.ConfigInputTextCursorBlink flag).
+- Supports blinking cursor (can be turned on/off using Dear ImGui's global io.ConfigInputTextCursorBlink flag).
 - Allows bracket matching and coloring (similar to Visual Studio Code) to be turned on and off.
 - Supports multiple cursors and multiple selections.
 - Auto indent with simplified implementation (can be turned on and off).
@@ -127,12 +127,13 @@ Dear ImGui context by doing the following:
 	- Ctrl with single left mouse click creates a new cursor on Linux and Windows.
 	- Ctrl-A select all text.
 	- Ctrl-D creates a new cursor and selects the next instance of the current selection.
-	- Double left mouse clicks on a bracket or parenthesis selects the contents including the brackets.
+	- Double left mouse clicks on a curly bracket selects the contents of the block.
+	- Shift + Double left mouse clicks on a curly bracket selects the contents of the block including the brackets.
 	- Double left mouse clicks not on a bracket or parenthesis, selects a word. Shift extends current selection.
 	- Triple left mouse clicks selects a line. Shift extends current selection.
 	- Dragging mouse with left mouse button selects text. Shift extends current selection.
-	- Alt-Shift-RightArrow (on MacOS) and Ctrl-Shift-RightArrow (on Linux and Windows) grows the selection to the next codeblock.
-	- Alt-Shift-LeftArrow (on MacOS) and Ctrl-Shift-LeftArrow (on Linux and Windows) shrinks the selection to the next codeblock.
+	- Alt-Shift-RightArrow (on MacOS) and Ctrl-Shift-RightArrow (on Linux and Windows) grows selections to the outer block. First just the contents, than including the curly brackets. Continously hitting the key combination keeps growing the selections.
+	- Alt-Shift-LeftArrow (on MacOS) and Ctrl-Shift-LeftArrow (on Linux and Windows) shrinks selections to the inner block. First including the curly brackets, that just the contents. Continously hitting the key combination keeps shrinking the selections.
 
 - Clipboard Operations:
 	- Ctrl-X or Shift-Delete cuts selected text or current line if no selection.
