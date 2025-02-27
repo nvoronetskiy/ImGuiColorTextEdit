@@ -127,13 +127,13 @@ Dear ImGui context by doing the following:
 	- Ctrl with single left mouse click creates a new cursor on Linux and Windows.
 	- Ctrl-A select all text.
 	- Ctrl-D creates a new cursor and selects the next instance of the current selection.
-	- Double left mouse clicks on a curly bracket selects the contents of the block.
-	- Shift + Double left mouse clicks on a curly bracket selects the contents of the block including the brackets.
+	- Double left mouse clicks on a curly bracket selects the content of the relevant block and replaces all previous cursors.
+	- Shift + Double left mouse clicks on a curly bracket selects the content of the relevant block including the brackets and replaces all previous cursors.
 	- Double left mouse clicks not on a bracket or parenthesis, selects a word. Shift extends current selection.
 	- Triple left mouse clicks selects a line. Shift extends current selection.
 	- Dragging mouse with left mouse button selects text. Shift extends current selection.
-	- Alt-Shift-RightArrow (on MacOS) and Ctrl-Shift-RightArrow (on Linux and Windows) grows selections to the outer block. First just the contents, than including the curly brackets. Continously hitting the key combination keeps growing the selections.
-	- Alt-Shift-LeftArrow (on MacOS) and Ctrl-Shift-LeftArrow (on Linux and Windows) shrinks selections to the inner block. First including the curly brackets, that just the contents. Continously hitting the key combination keeps shrinking the selections.
+	- Alt-Shift-RightArrow (on MacOS) and Ctrl-Shift-RightArrow (on Linux and Windows) grows all selections to outer blocks. First just the content of the block, than including the curly brackets. Continuously hitting the key combination keeps growing the selections.
+	- Alt-Shift-LeftArrow (on MacOS) and Ctrl-Shift-LeftArrow (on Linux and Windows) shrinks all selections to inner blocks. First including the curly brackets, that just the content of the block. Continuously hitting the key combination keeps shrinking the selections.
 
 - Clipboard Operations:
 	- Ctrl-X or Shift-Delete cuts selected text or current line if no selection.
