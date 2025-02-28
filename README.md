@@ -1,4 +1,19 @@
+<div align="center">
+
+![MacOS status](https://img.shields.io/github/actions/workflow/status/goossens/ImGuiColorTextEdit/macos.yml?branch=master&label=MacOS&style=for-the-badge)
+![Linux status](https://img.shields.io/github/actions/workflow/status/goossens/ImGuiColorTextEdit/linux.yml?branch=master&label=Linux&style=for-the-badge)
+![Windows status](https://img.shields.io/github/actions/workflow/status/goossens/ImGuiColorTextEdit/windows.yml?branch=master&label=Windows&style=for-the-badge)
+<br/>
+![Repo size](https://img.shields.io/github/repo-size/goossens/ImGuiColorTextEdit?style=for-the-badge)
+![Repo activity](https://img.shields.io/github/commit-activity/m/goossens/ImGuiColorTextEdit?label=Commits&style=for-the-badge)
+<br/>
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+![Maintained](https://img.shields.io/maintenance/yes/2025?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.9-blue?style=for-the-badge)
+
 # ImGuiColorTextEdit
+
+</div>
 
 ImGuiTextEdit is a syntax highlighting text editor for
 [Dear ImGui](https://github.com/ocornut/imgui) and it was originally developed by
@@ -57,7 +72,7 @@ public API to externally implement these features is however included.
 - Provides auto completion for paired glyphs (\[, \{, \(, \", \') (can be turned on and off).
 - If auto complete is turned on, accidentally typed closing glyphs are ignored.
 - If auto complete is turned on, selections can be surrounded by paired glyphs.
-- Supports blinking cursor (can be turned on/off using ImGui's global io.ConfigInputTextCursorBlink flag).
+- Supports blinking cursor (can be turned on/off using Dear ImGui's global io.ConfigInputTextCursorBlink flag).
 - Allows bracket matching and coloring (similar to Visual Studio Code) to be turned on and off.
 - Supports multiple cursors and multiple selections.
 - Auto indent with simplified implementation (can be turned on and off).
@@ -112,12 +127,13 @@ Dear ImGui context by doing the following:
 	- Ctrl with single left mouse click creates a new cursor on Linux and Windows.
 	- Ctrl-A select all text.
 	- Ctrl-D creates a new cursor and selects the next instance of the current selection.
-	- Double left mouse clicks on a bracket or parenthesis selects the contents including the brackets.
+	- Double left mouse clicks on a curly bracket selects the content of the relevant block and replaces all previous cursors.
+	- Shift + Double left mouse clicks on a curly bracket selects the content of the relevant block including the brackets and replaces all previous cursors.
 	- Double left mouse clicks not on a bracket or parenthesis, selects a word. Shift extends current selection.
 	- Triple left mouse clicks selects a line. Shift extends current selection.
 	- Dragging mouse with left mouse button selects text. Shift extends current selection.
-	- Alt-Shift-RightArrow (on MacOS) and Ctrl-Shift-RightArrow (on Linux and Windows) grows the selection to the next codeblock.
-	- Alt-Shift-LeftArrow (on MacOS) and Ctrl-Shift-LeftArrow (on Linux and Windows) shrinks the selection to the next codeblock.
+	- Alt-Shift-RightArrow (on MacOS) and Ctrl-Shift-RightArrow (on Linux and Windows) grows all selections to outer blocks. First just the content of the block, than including the curly brackets. Continuously hitting the key combination keeps growing the selections.
+	- Alt-Shift-LeftArrow (on MacOS) and Ctrl-Shift-LeftArrow (on Linux and Windows) shrinks all selections to inner blocks. First including the curly brackets, that just the content of the block. Continuously hitting the key combination keeps shrinking the selections.
 
 - Clipboard Operations:
 	- Ctrl-X or Shift-Delete cuts selected text or current line if no selection.
