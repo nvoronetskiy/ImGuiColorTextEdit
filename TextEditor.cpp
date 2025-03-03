@@ -2947,7 +2947,7 @@ void TextEditor::Document::updateMaximumColumn(int first, int last)
 	if (!empty())
 	{
         auto b = begin() + first;
-        auto e = begin() + last;
+        auto e = begin() + last + 1; // if first == last should update line.
 		for (auto line = b; line != e; ++line)
 		{
 			// determine the maximum column number for this line
