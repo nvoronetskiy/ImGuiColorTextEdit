@@ -101,7 +101,7 @@ Dear ImGui context by doing the following:
 - Call the TextEditor's Render member function every frame in your Dear ImGui loop.
 - If you plan to use non-ASCII characters in your text, see the Unicode section below.
 - Configure Dear ImGui's clipboard functions since that is what this editor uses.
-- For a complete example, please see the [example folder](example/);
+- For a complete example, please see the [example folder](example/).
 
 ## Default Keyboard and Mouse Mappings
 
@@ -127,10 +127,10 @@ Dear ImGui context by doing the following:
 	- Ctrl with single left mouse click creates a new cursor on Linux and Windows.
 	- Ctrl-A select all text.
 	- Ctrl-D creates a new cursor and selects the next instance of the current selection.
-	- Double left mouse clicks on a curly bracket selects the content of the relevant block and replaces all previous cursors.
-	- Shift + Double left mouse clicks on a curly bracket selects the content of the relevant block including the brackets and replaces all previous cursors.
-	- Double left mouse clicks not on a bracket or parenthesis, selects a word. Shift extends current selection.
-	- Triple left mouse clicks selects a line. Shift extends current selection.
+	- Double left mouse clicks on a curly bracket select the content of the relevant block and replaces all previous cursors.
+	- Shift + Double left mouse clicks on a curly bracket select the content of the relevant block including the brackets and replaces all previous cursors.
+	- Double left mouse clicks not on a bracket or parenthesis, select a word. Adding Shift extends current selection.
+	- Triple left mouse clicks select a line. Adding Shift extends current selection.
 	- Dragging mouse with left mouse button selects text. Shift extends current selection.
 	- Alt-Shift-RightArrow (on MacOS) and Ctrl-Shift-RightArrow (on Linux and Windows) grows all selections to outer blocks. First just the content of the block, than including the curly brackets. Continuously hitting the key combination keeps growing the selections.
 	- Alt-Shift-LeftArrow (on MacOS) and Ctrl-Shift-LeftArrow (on Linux and Windows) shrinks all selections to inner blocks. First including the curly brackets, that just the content of the block. Continuously hitting the key combination keeps shrinking the selections.
@@ -181,7 +181,7 @@ processing a lot harder as you constantly have to parse UTF-8 sequences.
 This rewrite internally uses unicode codepoints that are either 16 or 32 bits
 depending on how Dear ImGui is configured. If IMGUI_USE_WCHAR32 is defined,
 Dear ImGui as well as this editor use 32 bits to store a codepoint. If it is not
-defined (which is the default), 16 bits are used for each code point which
+defined (which is the default), 16 bits are used for each codepoint which
 basically limits unicode support to the Basic Multilingual Plane (see
 [this article on Wikipedia](https://en.wikipedia.org/wiki/Plane_(Unicode))).
 
@@ -197,7 +197,7 @@ and set the desired glyphs ranges, please see the
 While this editor relies on [Omar Cornut's Dear ImGui](https://github.com/ocornut/imgui),
 it does not follow the "pure" one widget - one function approach. Since the editor
 has to maintain a relatively complex and large internal state, it did not seem
-to be practical to try and enforce fully immediate mode. It therefore stores
+to be practical to try and enforce full immediate mode. It therefore stores
 its internal state in an object instance which is reused across frames. This
 object is an instance of the TextEditor class which not only stores the
 internal state, it also provides the public API. The "Render" member functions
@@ -250,7 +250,7 @@ for instance opening a multiline comment at the start of the document,
 causes the entire document to be re-colorized. Luckily the new engine is fast
 enough that you don't notice this and it would only affect a single frame. I
 think it is also important to point out that this widget is not really intended
-for gigabyte size text files. For those, I would still use a regular text
+for mega/gigabyte size text files. For those, I would still use a regular text
 editors.
 
 #### Bracketeer
@@ -276,7 +276,7 @@ for all Dear InGui and the original text editor, all public member functions sta
 with an uppercase letter. Internally, all private member functions and variables
 start with a lowercase letter so it's easy to see what's public and what's private.
 
-In addition to being the public interface, the TextEditor class also is responsible
+In addition to being the public interface, the TextEditor class is also responsible
 for synchronizing the state of the lower levels of the architecture. When for
 instance the user pastes some text, TextEditor ensures that the Document gets
 updated, Cursors get adjusted (if required), Transaction records are created (so
