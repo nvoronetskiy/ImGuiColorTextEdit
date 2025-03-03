@@ -1633,7 +1633,8 @@ void TextEditor::handleCharacter(ImWchar character) {
 	auto transaction = startTransaction();
 
 	auto opener = static_cast<char>(character);
-	auto isPaired = !overwrite && completePairedGlyphs && (opener == '{' || opener == '[' || opener == '(' || opener == '"' || opener == '\'');
+	bool largerThanByte = character > 255;
+	auto isPaired = !largerThanByte && !overwrite && completePairedGlyphs && (opener == '{' || opener == '[' || opener == '(' || opener == '"' || opener == '\'');
 	auto closer = opener == '{' ? '}' : (opener == '[' ? ']' : (opener == '(' ? ')' : opener));
 
 	// ignore input if it was the closing character for a pair that was automatically inserted
