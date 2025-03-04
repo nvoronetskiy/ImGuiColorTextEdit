@@ -935,7 +935,7 @@ void TextEditor::handleMouseInteractions() {
 					bool handled = false;
 
 					// select bracketed section (if required)
-					if (Bracketeer::isBracketOpener(codepoint)) {
+					if (CodePoint::isBracketOpener(codepoint)) {
 						auto brackets = bracketeer.getEnclosingBrackets(document.getRight(mouseCoordAbs));
 
 						if (brackets != bracketeer.end()) {
@@ -949,7 +949,7 @@ void TextEditor::handleMouseInteractions() {
 							handled = true;
 						}
 
-					} else if (Bracketeer::isBracketCloser(codepoint)) {
+					} else if (CodePoint::isBracketCloser(codepoint)) {
 						auto brackets = bracketeer.getEnclosingBrackets(mouseCoordAbs);
 
 						if (brackets != bracketeer.end()) {
@@ -1101,7 +1101,7 @@ void TextEditor::growSelectionsToCurlyBrackets() {
 		auto startCodePoint = document.getCodePoint(document.getLeft(start));
 		auto endCodePoint = document.getCodePoint(end);
 
-		if (startCodePoint == '{' && endCodePoint == '}') {
+		if (startCodePoint == CodePoint::openCurlyBracket && endCodePoint == CodePoint::closeCurlyBracket) {
 			cursor.update(document.getLeft(start),document.getRight(end));
 
 		} else {
@@ -1131,7 +1131,7 @@ void TextEditor::shrinkSelectionsToCurlyBrackets() {
 			auto startCodePoint = document.getCodePoint(start);
 			auto endCodePoint = document.getCodePoint(document.getLeft(end));
 
-			if (startCodePoint == '{' && endCodePoint == '}') {
+			if (startCodePoint == CodePoint::openCurlyBracket && endCodePoint == CodePoint::closeCurlyBracket) {
 				cursor.update(document.getRight(start),document.getLeft(end));
 
 			} else {
@@ -1632,10 +1632,9 @@ void TextEditor::moveTo(Coordinate coordinate, bool select) {
 void TextEditor::handleCharacter(ImWchar character) {
 	auto transaction = startTransaction();
 
-	auto opener = static_cast<char>(character);
-	bool largerThanByte = character > 255;
-	auto isPaired = !largerThanByte && !overwrite && completePairedGlyphs && (opener == '{' || opener == '[' || opener == '(' || opener == '"' || opener == '\'');
-	auto closer = opener == '{' ? '}' : (opener == '[' ? ']' : (opener == '(' ? ')' : opener));
+	auto opener = character;
+	auto isPaired = !overwrite && completePairedGlyphs && CodePoint::isPairOpener(opener);
+	auto closer = CodePoint::toPairCloser(opener);
 
 	// ignore input if it was the closing character for a pair that was automatically inserted
 	if (completePairCloser) {
@@ -1655,12 +1654,13 @@ void TextEditor::handleCharacter(ImWchar character) {
 				auto start = cursor->getSelectionStart();
 				auto end = cursor->getSelectionEnd();
 
-				// insert the opening glyph
-				auto end1 = insertText(transaction, end, std::string_view(&closer, 1));
+				// insert the closing glyph
+				char utf8[4];
+				auto end1 = insertText(transaction, end, std::string_view(utf8, CodePoint::write(utf8, closer)));
 				cursors.adjustForInsert(cursor, start, end1);
 
-				// insert the closing glyph
-				auto end2 = insertText(transaction, start, std::string_view(&opener, 1));
+				// insert the opening glyph
+				auto end2 = insertText(transaction, start, std::string_view(utf8, CodePoint::write(utf8, opener)));
 				cursors.adjustForInsert(cursor, start, end2);
 
 				// update old selection
@@ -1670,9 +1670,10 @@ void TextEditor::handleCharacter(ImWchar character) {
 
 	} else if (isPaired) {
 		// insert the requested pair
-		std::string pair(2, 0);
-		pair[0] = opener;
-		pair[1] = closer;
+		char utf8[8];
+		auto size = CodePoint::write(utf8, opener);
+		size += CodePoint::write(utf8 + size, closer);
+		std::string_view pair(utf8, size);
 
 		for (auto cursor = cursors.begin(); cursor < cursors.end(); cursor++) {
 			auto start = cursor->getSelectionStart();
@@ -2335,12 +2336,14 @@ void TextEditor::autoIndentAllCursors(std::shared_ptr<Transaction> transaction) 
 		auto newCursorIndex = static_cast<int>(whitespace.size());
 
 		// handle special cases
-		if (previousChar == '[' || previousChar == '{') {
+		if (previousChar == CodePoint::openCurlyBracket || previousChar == CodePoint::openSquareBracket) {
 			// add to an existing block
 			insert += "\t";
 			newCursorIndex++;
 
-			if ((previousChar == '[' && nextChar == ']') || (previousChar == '{' && nextChar == '}')) {
+			if ((previousChar == CodePoint::openCurlyBracket && nextChar == CodePoint::closeCurlyBracket) ||
+				(previousChar == CodePoint::openSquareBracket && nextChar == CodePoint::closeSquareBracket)) {
+
 				// open a new block
 				insert += "\n" + whitespace;
 			}
@@ -3458,12 +3461,12 @@ TextEditor::State TextEditor::Colorizer::update(Line& line, const Language* lang
 				glyph += size;
 
 			// are we starting a single quoted string
-			} else if (language->hasSingleQuotedStrings && glyph->codepoint == '\'') {
+			} else if (language->hasSingleQuotedStrings && glyph->codepoint == CodePoint::singleQuote) {
 				state = State::inSingleQuotedString;
 				(glyph++)->color = Color::string;
 
 			// are we starting a double quoted string
-			} else if (language->hasDoubleQuotedStrings && glyph->codepoint == '"') {
+			} else if (language->hasDoubleQuotedStrings && glyph->codepoint == CodePoint::doubleQuote) {
 				state = State::inDoubleQuotedString;
 				(glyph++)->color = Color::string;
 
@@ -3603,7 +3606,7 @@ TextEditor::State TextEditor::Colorizer::update(Line& line, const Language* lang
 					(glyph++)->color = Color::string;
 				}
 
-			} else if (glyph->codepoint == '\'') {
+			} else if (glyph->codepoint == CodePoint::singleQuote) {
 				(glyph++)->color = Color::string;
 				state = State::inText;
 
@@ -3621,7 +3624,7 @@ TextEditor::State TextEditor::Colorizer::update(Line& line, const Language* lang
 					(glyph++)->color = Color::string;
 				}
 
-			} else if (glyph->codepoint == '"') {
+			} else if (glyph->codepoint == CodePoint::doubleQuote) {
 				(glyph++)->color = Color::string;
 				state = State::inText;
 
@@ -3738,7 +3741,7 @@ void TextEditor::Bracketeer::update(Document& document) {
 			auto& glyph = document[line][index];
 
 			// handle a "bracket opener" that is not in a comment, string or preprocessor statement
-			if (isBracketCandidate(glyph) && isBracketOpener(glyph.codepoint)) {
+			if (isBracketCandidate(glyph) && CodePoint::isBracketOpener(glyph.codepoint)) {
 				// start a new level
 				levels.emplace_back(size());
 				emplace_back(glyph.codepoint, Coordinate(line, document.getColumn(line, index)), static_cast<ImWchar>(0), Coordinate::invalid(), level);
@@ -3746,13 +3749,13 @@ void TextEditor::Bracketeer::update(Document& document) {
 				level++;
 
 			// handle a "bracket closer" that is not in a comment, string or preprocessor statement
-			} else if (isBracketCandidate(glyph) && isBracketCloser(glyph.codepoint)) {
+			} else if (isBracketCandidate(glyph) && CodePoint::isBracketCloser(glyph.codepoint)) {
 				if (levels.size()) {
 					auto& lastBracket = at(levels.back());
 					levels.pop_back();
 					level--;
 
-					if (lastBracket.startChar == toBracketOpener(glyph.codepoint)) {
+					if (lastBracket.startChar == CodePoint::toPairOpener(glyph.codepoint)) {
 						// handle matching bracket
 						glyph.color = bracketColors[level % 3];
 						lastBracket.endChar = glyph.codepoint;
@@ -3785,7 +3788,7 @@ void TextEditor::Bracketeer::update(Document& document) {
 
 
 //
-//	TextEditor::Bracketeer::getEnclosingCurlyBrackets
+//	TextEditor::Bracketeer::getEnclosingBrackets
 //
 
 TextEditor::Bracketeer::iterator TextEditor::Bracketeer::getEnclosingBrackets(Coordinate location) {
@@ -3822,7 +3825,7 @@ TextEditor::Bracketeer::iterator TextEditor::Bracketeer::getEnclosingCurlyBracke
 			done = true;
 		}
 
-		else if (i->isAround(first) && i->isAround(last) && i->startChar == '{') {
+		else if (i->isAround(first) && i->isAround(last) && i->startChar == CodePoint::openCurlyBracket) {
 			// this could be what we're looking for
 			brackets = i;
 		}
@@ -3847,7 +3850,12 @@ TextEditor::Bracketeer::iterator TextEditor::Bracketeer::getInnerCurlyBrackets(C
 			if (i->level <= outer->level) {
 				done = true;
 
-			} else if (i->level == outer->level + 1 && i->startChar == '{' && i->start > first && i->end < last) {
+			} else if (
+				i->level == outer->level + 1 &&
+				i->startChar == CodePoint::openCurlyBracket &&
+				i->start > first &&
+				i->end < last) {
+
 				brackets = i;
 				done = true;
 			}
