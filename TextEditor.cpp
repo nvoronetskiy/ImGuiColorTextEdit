@@ -2944,13 +2944,17 @@ void TextEditor::Document::updateMaximumColumn(int first, int last)
 {
 	// process specified lines
 	int sz = (int)size();
+    if (first == last)
+    {
+        ++last; // update at least one line
+    }
 	first  = std::clamp(first, 0, sz);
 	last   = std::clamp(last, 0, sz);
 
 	if (!empty())
 	{
         auto b = begin() + first;
-        auto e = begin() + last + 1; // if first == last should update line.
+        auto e = begin() + last;
 		for (auto line = b; line != e; ++line)
 		{
 			// determine the maximum column number for this line

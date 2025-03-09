@@ -460,6 +460,34 @@ public:
 		}
 	};
 
+
+    //vv SandBox functions
+//inline auto& getDocument() { return document; }
+    inline void mousePositionToTextPosition(const ImVec2& mousePos, int& line, int& column, bool normalize)
+    {
+        auto mouseCoord = Coordinate(
+            static_cast<int>(std::floor(mousePos.y / glyphSize.y)),
+            static_cast<int>(std::floor((mousePos.x - textOffset) / glyphSize.x)));
+        mouseCoord.line += GetFirstVisibleLine();
+        mouseCoord.column += GetFirstVisibleColumn();
+        if (normalize)
+        {
+            mouseCoord = document.normalizeCoordinate(mouseCoord);
+        }
+        line = mouseCoord.line;
+        column = mouseCoord.column;
+    }
+
+    inline std::string wordInPosition(int line, int column)
+    {
+        const Coordinate coord(line, column);
+        auto start_coord = document.findWordStart(coord);
+        auto end_coord = document.findWordEnd(coord);
+        return document.getSectionText(start_coord, end_coord);
+    }
+    //^^ SandBox functions
+
+
 private:
 	//
 	// below is the private API
