@@ -16,6 +16,9 @@ add_subdirectory(deps)
 add_executable(example
 	../TextEditor.cpp
 	../TextEditor.h
+	../TextDiff.cpp
+	../TextDiff.h
+	../dtl.h
 	editor.cpp
 	main.cpp)
 

@@ -11,11 +11,11 @@
 ![Maintained](https://img.shields.io/maintenance/yes/2025?style=for-the-badge)
 ![Version](https://img.shields.io/badge/version-0.9-blue?style=for-the-badge)
 
-# ImGuiColorTextEdit
+# Colorizing text editor and text diff for Dear ImGui
 
 </div>
 
-ImGuiTextEdit is a syntax highlighting text editor for
+TextEdit is a syntax highlighting text editor for
 [Dear ImGui](https://github.com/ocornut/imgui) and it was originally developed by
 [Balázs Jákó](https://github.com/BalazsJako/ImGuiColorTextEdit). Unfortunately, he no
 longer has time to work on the project. In fact, the last update to his repository was
@@ -83,6 +83,7 @@ public API to externally implement these features is however included.
 - API to strip trailing whitespaces.
 - Whitespace indicators for tabs and spaces (can be turned on and off).
 - No longer uses regular expressions for colorizing text (see below).
+- Provides an optional companion widget to show source code differences between versions (see below).
 
 ## Integration
 
@@ -90,18 +91,28 @@ As explained above, the editor is developed and maintained as part of a larger p
 In that bigger project, the editor is spread out over multiple source files and some
 of those are automatically generated using tools or derived from datasets (like the
 unicode database). Every time the editor is updated in the bigger project, relevant
-files are concatenated into a simple 2 file distribution which is included here.
+files are concatenated into a simple 2 (or 5 if you also want to use TextDiff)
+file distribution which is included here.
 
 This repository therefore provides a simple mechanism to reuse the editor in any
 Dear ImGui context by doing the following:
 
-- Include the TextEditor.h and TextEditor.cpp files in your project.
+- Include the TextEditor.cpp and TextEditor.h files in your project.
 - Instantiate a TextEditor object for each editor widget you need.
 - Use the public API to set editor options or interact with the editor contents.
 - Call the TextEditor's Render member function every frame in your Dear ImGui loop.
 - If you plan to use non-ASCII characters in your text, see the Unicode section below.
 - Configure Dear ImGui's clipboard functions since that is what this editor uses.
-- For a complete example, please see the [example folder](example/).
+
+If you also want to use the TextDiff widget, you must:
+
+- Include TextDiff.cpp, TextDiff.h and dtl.h in your project.
+- Instantiate a TextDiff object for each diff widget you need.
+- Use the public API to set diff options.
+- Call the TextDiff's Render member function every frame in your Dear ImGui loop.
+- If you properly configured Dear ImGui for the TextEditor (see above), you are good to go.
+
+For a complete example, please see the [example folder](example/).
 
 ## Default Keyboard and Mouse Mappings
 
@@ -286,6 +297,18 @@ informed of the changes.
 The final responsibility of the TextEditor class is rendering and user input
 (keyboard and mouse) processing.
 
+#### TextDiff
+
+TextDiff is a separate widget that is derived from TextEditor which allows
+you to show the differences between two versions of some code while preserving
+the color highlighting. The code for this widget is in separate files (see integration above)
+so it is optional. TextDiff is readonly.
+
+Below is a screenshot of its use in the [example application](example/). Please
+have a look at that code to see how easy it is to use this widget.
+
+![Screenshot 2](screenshot2.png)
+
 ## Issues
 
 If you are interested in using this Text Editor, steal parts of the code, make
@@ -313,7 +336,14 @@ all the issues on the original and the fork but I think I have better use for my
 time. If you believe you deserve credit here, please raise an issue with reference
 to your work. I'll gladly add it.
 
+For the Text Diff widget, credit goes to [Tatsuhiko Kubo (cubicdaiya)](https://github.com/cubicdaiya)
+for his [Diff Template Library (DTL)](https://github.com/cubicdaiya/dtl) which is
+released under the BSD License.
+
 ## License
 
 This work is licensed under the terms of the MIT license.
 For a copy, see <https://opensource.org/licenses/MIT>.
+
+The included DTL library (which is only used in the Diff Widget) is released under the
+[BSD license](https://github.com/cubicdaiya/dtl/blob/master/COPYING).

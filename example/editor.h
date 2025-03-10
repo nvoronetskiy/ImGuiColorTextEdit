@@ -13,6 +13,7 @@
 #include <string>
 
 #include "../TextEditor.h"
+#include "../TextDiff.h"
 
 
 //
@@ -42,12 +43,14 @@ public:
 	void renderMenubar();
 	void renderStatusbar();
 
+	void showDiff();
 	void showFileOpen();
 	void showSaveFileAs();
 	void showConfirmClose(std::function<void()> callback);
 	void showConfirmQuit();
 	void showError(const std::string& message);
 
+	void renderDiff();
 	void renderFileOpen();
 	void renderSaveAs();
 	void renderConfirmClose();
@@ -58,7 +61,9 @@ public:
 	inline bool isSavable() const { return isDirty() && filename != "untitled"; }
 
 	// properties
+	std::string originalText;
 	TextEditor editor;
+	TextDiff diff;
 	std::string filename;
 	size_t version;
 	bool done = false;
@@ -68,6 +73,7 @@ public:
 	// editor state
 	enum class State {
 		edit,
+		diff,
 		newFile,
 		openFile,
 		saveFileAs,
