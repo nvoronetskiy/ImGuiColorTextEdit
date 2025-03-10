@@ -9,6 +9,8 @@
 //	Include files
 //
 
+#include <cmath>
+
 #include "dtl.h"
 #include "TextDiff.h"
 
@@ -43,8 +45,8 @@ void TextDiff::SetText(const std::string_view& left, const std::string_view& rig
 	colorizer.updateEntireDocument(rightDocument, language);
 
 	// setup line number decoration
-	leftLineNumberDigits = std::log10(leftDocument.lineCount() + 1) + 1.0f;
-	rightLineNumberDigits = std::log10(leftDocument.lineCount() + 1) + 1.0f;
+	leftLineNumberDigits = static_cast<int>(std::log10(leftDocument.lineCount() + 1) + 1.0f);
+	rightLineNumberDigits = static_cast<int>(std::log10(leftDocument.lineCount() + 1) + 1.0f);
 	decoratorWidth = -(leftLineNumberDigits + rightLineNumberDigits + 4.0f);
 
 	decoratorCallback = [this](TextEditor::Decorator& decorator) {
@@ -128,12 +130,12 @@ void TextDiff::createCombinedView() {
 
 			case Status::added:
 				document.emplace_back(rightDocument[line.rightLine]);
-				addMarker(i, 0, addedColor, "", "");
+				addMarker(static_cast<int>(i), 0, addedColor, "", "");
 				break;
 
 			case Status::deleted:
 				document.emplace_back(leftDocument[line.leftLine]);
-				addMarker(i, 0, deletedColor, "", "");
+				addMarker(static_cast<int>(i), 0, deletedColor, "", "");
 				break;
 		}
 	}

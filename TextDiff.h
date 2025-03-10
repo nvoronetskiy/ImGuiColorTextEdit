@@ -38,9 +38,17 @@ public:
 	inline void SetShowLineNumbersEnabled(bool /* value */) {}
 	inline void SetShowMatchingBrackets(bool /* value */) {}
 
+	inline void AddMarker(int /* line */, ImU32 /* lineNumberColor */, ImU32 /* textColor */, const std::string_view& /* lineNumberTooltip */, const std::string_view& /* textTooltip */) {}
+	inline void ClearMarkers() {}
+
 	inline void SetLineDecorator(float /* width */, std::function<void(Decorator& decorator)> /* callback */) {}
 	inline void ClearLineDecorator() {}
-	inline bool HasLineDecorator() const { return false; }
+
+	inline void SetLineNumberContextMenuCallback(std::function<void(int line)> /* callback */) {}
+	inline void ClearLineNumberContextMenuCallback() {}
+
+	inline void SetTextContextMenuCallback(std::function<void(int line, int column)> /* callback */) {}
+	inline void ClearTextContextMenuCallback() {}
 
 private:
 	// properties
