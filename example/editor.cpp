@@ -471,12 +471,12 @@ void Editor::showError(const std::string &message) {
 //
 
 void Editor::renderDiff() {
-	ImGui::OpenPopup("Changes");
+	ImGui::OpenPopup("Changes since Opening File##diff");
 	auto viewport = ImGui::GetMainViewport();
 	ImVec2 center = viewport->GetCenter();
 	ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
-	if (ImGui::BeginPopupModal("Changes", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+	if (ImGui::BeginPopupModal("Changes since Opening File##diff", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 		diff.Render("diff", viewport->Size * 0.8f, true);
 		ImGui::Separator();
 

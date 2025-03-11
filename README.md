@@ -44,7 +44,7 @@ You can find all text editor source code components here in the
 To respect its origins, this repository will remain a fork (of a fork) although
 there now is little code in common.
 
-![Screenshot](screenshot.png)
+![Screenshot](docs/textEditor.png)
 
 Note: In the screenshot above, the tabs and the menubar are not part of the
 text editor widget. They are part of a custom enclosing IDE (which is part of
@@ -67,6 +67,7 @@ public API to externally implement these features is however included.
 - Has find/replace user interface and API with full undo/redo.
 - Find has options for whole word and/or case-sensitive searches.
 - Has Marker API to specify lines and/or line numbers to highlight and optional show tooltips (see [example](docs/markers.md)).
+- Has optional scrollbar minimap to render cursor/selection and marker locations.
 - Has API to decorate each line (useful for debuggers and IDEs) (see [example](docs/lineDecorator.md)).
 - Provides optional and customizable line number or text right click context menus  (see [example](docs/contextMenus.md))
 - Provides auto completion for paired glyphs (\[, \{, \(, \", \') (can be turned on and off).
@@ -220,7 +221,7 @@ The block diagram below shows the architecture of this widget. At the top is
 the public facing TextEditor instance and at the bottom are the private classes
 that store and maintain the internal state.
 
-![Architecture](architecture.png)
+![Architecture](docs/architecture.png)
 
 #### Document
 
@@ -307,7 +308,7 @@ so it is optional. TextDiff is readonly.
 Below is a screenshot of its use in the [example application](example/). Please
 have a look at that code to see how easy it is to use this widget.
 
-![Screenshot 2](screenshot2.png)
+![Screenshot 2](docs/textDiffCombined.png)
 
 ## Issues
 
