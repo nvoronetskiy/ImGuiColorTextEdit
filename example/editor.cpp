@@ -478,10 +478,18 @@ void Editor::renderDiff() {
 
 	if (ImGui::BeginPopupModal("Changes since Opening File##diff", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 		diff.Render("diff", viewport->Size * 0.8f, true);
-		ImGui::Separator();
 
+		ImGui::Separator();
 		static constexpr float buttonWidth = 80.0f;
-		ImGui::Indent(ImGui::GetContentRegionAvail().x - buttonWidth);
+		auto buttonOffset = ImGui::GetContentRegionAvail().x - buttonWidth;
+		bool sideBySide = diff.GetSideBySideMode();
+
+		if (ImGui::Checkbox("Show side-by-side", &sideBySide)) {
+			diff.SetSideBySideMode(sideBySide);
+		}
+
+		ImGui::SameLine();
+		ImGui::Indent(buttonOffset);
 
 		if (ImGui::Button("OK", ImVec2(buttonWidth, 0.0f)) || ImGui::IsKeyPressed(ImGuiKey_Escape, false)) {
 			state = State::edit;

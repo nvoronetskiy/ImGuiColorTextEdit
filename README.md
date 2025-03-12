@@ -301,14 +301,22 @@ The final responsibility of the TextEditor class is rendering and user input
 #### TextDiff
 
 TextDiff is a separate widget that is derived from TextEditor which allows
-you to show the differences between two versions of some code while preserving
-the color highlighting. The code for this widget is in separate files (see integration above)
-so it is optional. TextDiff is readonly.
+you to show the differences between two versions of some code while preserving color
+highlighting. The code for this widget is in separate files (see integration above)
+so it is optional. TextDiff is readonly and has two modes:
 
-Below is a screenshot of its use in the [example application](example/). Please
-have a look at that code to see how easy it is to use this widget.
+- **Integrated view** where differences are depicted vertically using the standard "diff" look and feel. This view is implemented as a read-only TextEditor with markings and a line decorator which means that functions like text select and copy are available. This is the default view.
+
+- **Side-by-side view** where the original and altered versions are shown/compared side-by-side. This a a custom static view that does not have the usual TextEditor features like text select or copy. Scrolling however is available.
+
+In both modes, the provided text can be colored based on a specified language and
+color palette like in the TextEditor. The background colors for the difference
+highlighting are not part of the palette but can still be changed through a the public API.
+
+Below are two screenshots of its use in both modes. Have a look at the code in the [example application](example/) to see how easy it is to use this TextDiff widget.
 
 ![Screenshot 2](docs/textDiffCombined.png)
+![Screenshot 3](docs/textDiffSideBySide.png)
 
 ## Issues
 
