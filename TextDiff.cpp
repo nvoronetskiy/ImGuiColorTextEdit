@@ -416,9 +416,9 @@ void TextDiff::renderSideBySideLine(float x, float y, TextEditor::Line& line) {
 
 		} else if (codepoint == ' ') {
 			if (showWhitespaces) {
-				const auto x = glyphPos.x + glyphSize.x * 0.5f;
-				const auto y = glyphPos.y + fontSize * 0.5f;
-				drawList->AddCircleFilled(ImVec2(x, y), 1.5f, palette.get(Color::whitespace), 4);
+				const auto x1 = glyphPos.x + glyphSize.x * 0.5f;
+				const auto y1 = glyphPos.y + fontSize * 0.5f;
+				drawList->AddCircleFilled(ImVec2(x1, y1), 1.5f, palette.get(Color::whitespace), 4);
 			}
 
 		} else {
