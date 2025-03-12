@@ -291,14 +291,14 @@ void TextDiff::renderSideBySideBackground() {
 
 		switch(line.status) {
 			case LineStatus::common:
-				snprintf(buffer, sizeof(buffer), " %*ld", leftLineNumberDigits, line.leftLine + 1);
+				snprintf(buffer, sizeof(buffer), " %*d", leftLineNumberDigits, static_cast<int>(line.leftLine + 1));
 				drawList->AddText(ImVec2(leftLineNumberPos, y), palette.get(Color::lineNumber), buffer);
-				snprintf(buffer, sizeof(buffer), " %*ld", rightLineNumberDigits, line.rightLine + 1);
+				snprintf(buffer, sizeof(buffer), " %*d", rightLineNumberDigits, static_cast<int>(line.rightLine + 1));
 				drawList->AddText(ImVec2(rightLineNumberPos, y), palette.get(Color::lineNumber), buffer);
 				break;
 
 			case LineStatus::added:
-				snprintf(buffer, sizeof(buffer), " %*ld +", rightLineNumberDigits, line.rightLine + 1);
+				snprintf(buffer, sizeof(buffer), " %*d +", rightLineNumberDigits, static_cast<int>(line.rightLine + 1));
 				drawList->AddText(ImVec2(rightLineNumberPos, y), palette.get(Color::lineNumber), buffer);
 
 				drawList->AddRectFilled(
@@ -309,7 +309,7 @@ void TextDiff::renderSideBySideBackground() {
 				break;
 
 			case LineStatus::deleted:
-				snprintf(buffer, sizeof(buffer), " %*ld -", leftLineNumberDigits, line.leftLine + 1);
+				snprintf(buffer, sizeof(buffer), " %*d -", leftLineNumberDigits, static_cast<int>(line.leftLine + 1));
 				drawList->AddText(ImVec2(leftLineNumberPos, y), palette.get(Color::lineNumber), buffer);
 
 				drawList->AddRectFilled(
@@ -400,14 +400,14 @@ void TextDiff::renderSideBySideLine(float x, float y, TextEditor::Line& line) {
 		if (codepoint == '\t') {
 			if (showWhitespaces) {
 				const auto x1 = glyphPos.x + glyphSize.x * 0.3f;
-				const auto y = glyphPos.y + fontSize * 0.5f;
+				const auto y1 = glyphPos.y + fontSize * 0.5f;
 				const auto x2 = glyphPos.x + glyphSize.x;
 
 				ImVec2 p1, p2, p3, p4;
-				p1 = ImVec2(x1, y);
-				p2 = ImVec2(x2, y);
-				p3 = ImVec2(x2 - fontSize * 0.16f, y - fontSize * 0.16f);
-				p4 = ImVec2(x2 - fontSize * 0.16f, y + fontSize * 0.16f);
+				p1 = ImVec2(x1, y1);
+				p2 = ImVec2(x2, y1);
+				p3 = ImVec2(x2 - fontSize * 0.16f, y1 - fontSize * 0.16f);
+				p4 = ImVec2(x2 - fontSize * 0.16f, y1 + fontSize * 0.16f);
 
 				drawList->AddLine(p1, p2, palette.get(Color::whitespace));
 				drawList->AddLine(p2, p3, palette.get(Color::whitespace));
