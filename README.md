@@ -11,7 +11,7 @@
 ![Maintained](https://img.shields.io/maintenance/yes/2025?style=for-the-badge)
 ![Version](https://img.shields.io/badge/version-0.9-blue?style=for-the-badge)
 
-# Colorizing text editor and text diff for Dear ImGui
+# Colorizing Text Editor and Text Diff for Dear ImGui
 
 </div>
 
