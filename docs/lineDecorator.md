@@ -6,6 +6,8 @@ Below is an example where a 41 pixel wide column is requested for custom decorat
 
 When the line decorator is called, the ImGui position is already set (so you can render ImGui widgets immediately) and a new ID scope is established (to avoid ID collisions between lines). If you push style changes, make sure you also pop them before leaving the callback.
 
+If you don't want to express the decorator width in pixels, you can pass a negative number which is interpreted as the width of a specified number of glyphs.
+
 ```c++
 editor.SetLineDecorator(41.0f, [](TextEditor::Decorator& decorator) {
 	if (decorator.line == 10 || decorator.line == 15|| decorator.line == 16) {

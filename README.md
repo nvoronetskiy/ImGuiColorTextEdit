@@ -11,11 +11,11 @@
 ![Maintained](https://img.shields.io/maintenance/yes/2025?style=for-the-badge)
 ![Version](https://img.shields.io/badge/version-0.9-blue?style=for-the-badge)
 
-# ImGuiColorTextEdit
+# Colorizing text editor and text diff for Dear ImGui
 
 </div>
 
-ImGuiTextEdit is a syntax highlighting text editor for
+TextEdit is a syntax highlighting text editor for
 [Dear ImGui](https://github.com/ocornut/imgui) and it was originally developed by
 [Balázs Jákó](https://github.com/BalazsJako/ImGuiColorTextEdit). Unfortunately, he no
 longer has time to work on the project. In fact, the last update to his repository was
@@ -44,7 +44,7 @@ You can find all text editor source code components here in the
 To respect its origins, this repository will remain a fork (of a fork) although
 there now is little code in common.
 
-![Screenshot](screenshot.png)
+![Screenshot](docs/textEditor.png)
 
 Note: In the screenshot above, the tabs and the menubar are not part of the
 text editor widget. They are part of a custom enclosing IDE (which is part of
@@ -67,6 +67,7 @@ public API to externally implement these features is however included.
 - Has find/replace user interface and API with full undo/redo.
 - Find has options for whole word and/or case-sensitive searches.
 - Has Marker API to specify lines and/or line numbers to highlight and optional show tooltips (see [example](docs/markers.md)).
+- Has optional scrollbar minimap to render cursor/selection and marker locations.
 - Has API to decorate each line (useful for debuggers and IDEs) (see [example](docs/lineDecorator.md)).
 - Provides optional and customizable line number or text right click context menus  (see [example](docs/contextMenus.md))
 - Provides auto completion for paired glyphs (\[, \{, \(, \", \') (can be turned on and off).
@@ -83,6 +84,7 @@ public API to externally implement these features is however included.
 - API to strip trailing whitespaces.
 - Whitespace indicators for tabs and spaces (can be turned on and off).
 - No longer uses regular expressions for colorizing text (see below).
+- Provides an optional companion widget to show source code differences between versions (see below).
 
 ## Integration
 
@@ -90,18 +92,28 @@ As explained above, the editor is developed and maintained as part of a larger p
 In that bigger project, the editor is spread out over multiple source files and some
 of those are automatically generated using tools or derived from datasets (like the
 unicode database). Every time the editor is updated in the bigger project, relevant
-files are concatenated into a simple 2 file distribution which is included here.
+files are concatenated into a simple 2 (or 5 if you also want to use TextDiff)
+file distribution which is included here.
 
 This repository therefore provides a simple mechanism to reuse the editor in any
 Dear ImGui context by doing the following:
 
-- Include the TextEditor.h and TextEditor.cpp files in your project.
+- Include the TextEditor.cpp and TextEditor.h files in your project.
 - Instantiate a TextEditor object for each editor widget you need.
 - Use the public API to set editor options or interact with the editor contents.
 - Call the TextEditor's Render member function every frame in your Dear ImGui loop.
 - If you plan to use non-ASCII characters in your text, see the Unicode section below.
 - Configure Dear ImGui's clipboard functions since that is what this editor uses.
-- For a complete example, please see the [example folder](example/).
+
+If you also want to use the TextDiff widget, you must:
+
+- Include TextDiff.cpp, TextDiff.h and dtl.h in your project.
+- Instantiate a TextDiff object for each diff widget you need.
+- Use the public API to set diff options.
+- Call the TextDiff's Render member function every frame in your Dear ImGui loop.
+- If you properly configured Dear ImGui for the TextEditor (see above), you are good to go.
+
+For a complete example, please see the [example folder](example/).
 
 ## Default Keyboard and Mouse Mappings
 
@@ -209,7 +221,7 @@ The block diagram below shows the architecture of this widget. At the top is
 the public facing TextEditor instance and at the bottom are the private classes
 that store and maintain the internal state.
 
-![Architecture](architecture.png)
+![Architecture](docs/architecture.png)
 
 #### Document
 
@@ -286,6 +298,26 @@ informed of the changes.
 The final responsibility of the TextEditor class is rendering and user input
 (keyboard and mouse) processing.
 
+#### TextDiff
+
+TextDiff is a separate widget that is derived from TextEditor which allows
+you to show the differences between two versions of some code while preserving color
+highlighting. The code for this widget is in separate files (see integration above)
+so it is optional. TextDiff is readonly and has two modes:
+
+- **Integrated view** where differences are depicted vertically using the standard "diff" look and feel. This view is implemented as a read-only TextEditor with markings and a line decorator which means that functions like text select and copy are available. This is the default view.
+
+- **Side-by-side view** where the original and altered versions are shown/compared side-by-side. This a a custom static view that does not have the usual TextEditor features like text select or copy. Scrolling however is available.
+
+In both modes, the provided text can be colored based on a specified language and
+color palette like in the TextEditor. The background colors for the difference
+highlighting are not part of the palette but can still be changed through a the public API.
+
+Below are two screenshots of its use in both modes. Have a look at the code in the [example application](example/) to see how easy it is to use this TextDiff widget.
+
+![Screenshot 2](docs/textDiffCombined.png)
+![Screenshot 3](docs/textDiffSideBySide.png)
+
 ## Issues
 
 If you are interested in using this Text Editor, steal parts of the code, make
@@ -313,7 +345,14 @@ all the issues on the original and the fork but I think I have better use for my
 time. If you believe you deserve credit here, please raise an issue with reference
 to your work. I'll gladly add it.
 
+For the Text Diff widget, credit goes to [Tatsuhiko Kubo (cubicdaiya)](https://github.com/cubicdaiya)
+for his [Diff Template Library (DTL)](https://github.com/cubicdaiya/dtl) which is
+released under the BSD License.
+
 ## License
 
 This work is licensed under the terms of the MIT license.
 For a copy, see <https://opensource.org/licenses/MIT>.
+
+The included DTL library (which is only used in the Diff Widget) is released under the
+[BSD license](https://github.com/cubicdaiya/dtl/blob/master/COPYING).
