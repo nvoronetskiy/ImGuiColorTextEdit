@@ -27,7 +27,7 @@
 
 int main(int, char**) {
 	// setup SDL
-	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD) != 0) {
+	if (!SDL_Init(SDL_INIT_VIDEO)) {
 		printf("Error: SDL_Init(): %s\n", SDL_GetError());
 		return -1;
 	}
@@ -41,7 +41,7 @@ int main(int, char**) {
 	}
 
 	// create GPU device
-	SDL_GPUDevice* gpu_device = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_DXIL | SDL_GPU_SHADERFORMAT_METALLIB,true,nullptr);
+	SDL_GPUDevice* gpu_device = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_DXIL | SDL_GPU_SHADERFORMAT_METALLIB, true, nullptr);
 
 	if (gpu_device == nullptr) {
 		printf("Error: SDL_CreateGPUDevice(): %s\n", SDL_GetError());
@@ -60,7 +60,6 @@ int main(int, char**) {
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = nullptr;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 	ImGui::StyleColorsDark();
 
 	// setup platform/renderer backends
@@ -70,7 +69,6 @@ int main(int, char**) {
 	init_info.ColorTargetFormat = SDL_GetGPUSwapchainTextureFormat(gpu_device, window);
 	init_info.MSAASamples = SDL_GPU_SAMPLECOUNT_1;
 	ImGui_ImplSDLGPU3_Init(&init_info);
-
 
 	// main loop
 	Editor editor;
