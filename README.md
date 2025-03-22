@@ -134,6 +134,18 @@ For a complete example, please see the [example folder](example/).
 	- Holding down the Alt key with the left or right arrow moves a whole word on MacOS.
 	- Holding down the Ctrl key with the left or right arrow moves a whole word on Linux and Windows.
 
+- Panning and scrolling:
+	- The text scrolls automatically when you move the cursor through keyboard actions.
+	- Mouse actions that extend the selections also implement auto scrolling.
+	- The text in the editor can still be scrolled using those bars that were invented in the 1970's.
+	- Devices with scroll wheels or those that simulated vertical and horizontal scroll wheels (like a touch pad, a mouse with a builtin touch pad or a pen) can also scroll the text. This is actually implemented in Dear ImGui (and used by the editor) and must be supported by your backend.
+	- The middle mouse button on a three-button mouse (or whatever is reported by your OS as a middle mouse button event) enters pan mode in the editor.
+	- In pan mode, the text is grabbed and dragged as the cursor moves.
+	- When you mouse moves beyond the boundaries of the editor window, it enters continuous panning mode and the further you move away form the window, the faster it pans.
+	- Panning mode is cancelled by releasing the middle mouse button.
+	- Panning as described above is typical in CAD or 3D type applications. Browsers on the other hand typically implement scrolling which moves the content in the opposite direction of panning. If you prefer this behavior, you can set this mode through the API by calling SetInversePanningEnabled(true).
+	- An optional indicator (default is on) is shown in the center of the editor window when entering (inverse) panning mode. If anybody finds this annoying, it can be turned off through an API by calling SetShowPanningIndicatorEnabled(false).
+
 - Cursors and selections:
 	- Alt with single left mouse click creates a new cursor on MacOS.
 	- Ctrl with single left mouse click creates a new cursor on Linux and Windows.
@@ -146,6 +158,7 @@ For a complete example, please see the [example folder](example/).
 	- Dragging mouse with left mouse button selects text. Shift extends current selection.
 	- Alt-Shift-RightArrow (on MacOS) and Ctrl-Shift-RightArrow (on Linux and Windows) grows all selections to outer blocks. First just the content of the block, than including the curly brackets. Continuously hitting the key combination keeps growing the selections.
 	- Alt-Shift-LeftArrow (on MacOS) and Ctrl-Shift-LeftArrow (on Linux and Windows) shrinks all selections to inner blocks. First including the curly brackets, that just the content of the block. Continuously hitting the key combination keeps shrinking the selections.
+	- Left mouse clicking or dragging over line numbers select line(s).
 
 - Clipboard Operations:
 	- Ctrl-X or Shift-Delete cuts selected text or current line if no selection.
@@ -177,10 +190,7 @@ For a complete example, please see the [example folder](example/).
 	- Ctrl-g finds next instance of search text.
 
 - Other:
-	- Mouse wheel movements scroll/pan the document.
-	- Middle mouse button and dragging scrolls/pans the document.
 	- Insert key toggles between insert (default) and overwrite modes.
-	- Clicking or dragging over line numbers select line(s).
 
 ## Unicode and UTF-8
 
