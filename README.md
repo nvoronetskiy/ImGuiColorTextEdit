@@ -136,15 +136,17 @@ For a complete example, please see the [example folder](example/).
 
 - Panning and scrolling:
 	- The text scrolls automatically when you move the cursor through keyboard actions.
-	- Mouse actions that extend the selections also implement auto scrolling.
+	- Mouse actions that extend the selections also apply auto scrolling.
 	- The text in the editor can still be scrolled using those bars that were invented in the 1970's.
 	- Devices with scroll wheels or those that simulated vertical and horizontal scroll wheels (like a touch pad, a mouse with a builtin touch pad or a pen) can also scroll the text. This is actually implemented in Dear ImGui (and used by the editor) and must be supported by your backend.
-	- The middle mouse button on a three-button mouse (or whatever is reported by your OS as a middle mouse button event) enters pan mode in the editor.
-	- In pan mode, the text is grabbed and dragged as the cursor moves.
-	- When you mouse moves beyond the boundaries of the editor window, it enters continuous panning mode and the further you move away form the window, the faster it pans.
-	- Panning mode is cancelled by releasing the middle mouse button.
-	- Panning as described above is typical in CAD or 3D type applications. Browsers on the other hand typically implement scrolling which moves the content in the opposite direction of panning. If you prefer this behavior, you can set this mode through the API by calling SetInversePanningEnabled(true).
-	- An optional indicator (default is on) is shown in the center of the editor window when entering (inverse) panning mode. If anybody finds this annoying, it can be turned off through an API by calling SetShowPanningIndicatorEnabled(false).
+	- The middle mouse button on a three-button mouse (or whatever is reported by your OS as a middle mouse button event) enters pan or scroll mode mode depending on the configuration. Pan mode is the default and you can switch this to Scroll mode by calling SetMiddleMouseScrollMode(). Calling SetMiddleMousePanMode() switches it back. The example application uses a menu option to toggle modes.
+	- In pan mode, the text is grabbed and dragged as the cursor moves and as long as the middle mouse button is down.
+	- When you mouse approaches the edges of the editor window, it enters continuous panning mode and the further you move away form the window, the faster it pans.
+	- Panning as described above is typical in CAD or 3D type applications.
+	- In scroll mode, you can release the middle mouse button and scroll the text just like you can in some browsers.
+	- Scroll mode is ended by any clicking any mouse button.
+	- Panning and scrolling operate in opposite directions as they are different paradigms.
+	- An optional indicator (default is on) is shown in the center of the editor window when entering pan/scroll mode. If anybody finds this annoying, it can be turned off through an API by calling SetShowPanScrollIndicatorEnabled(false).
 
 - Cursors and selections:
 	- Alt with single left mouse click creates a new cursor on MacOS.
