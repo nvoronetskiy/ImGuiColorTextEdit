@@ -11,7 +11,7 @@
 ![Maintained](https://img.shields.io/maintenance/yes/2025?style=for-the-badge)
 ![Version](https://img.shields.io/badge/version-0.9-blue?style=for-the-badge)
 
-# Colorizing text editor and text diff for Dear ImGui
+# Colorizing Text Editor and Text Diff for Dear ImGui
 
 </div>
 
@@ -57,7 +57,7 @@ public API to externally implement these features is however included.
 
 - Works on MacOS, Linux and Windows.
 - Has look and feel similar to Visual Studio Code.
-- Works with latest Dear ImGui version (currently v1.91.8) and does not use deprecated functions.
+- Works with latest Dear ImGui version (currently v1.91.9) and does not use deprecated functions.
 - Supports UTF-8 encoding with 16/32 bit codepoints (based on Dear ImGui configuration, see below).
 - Is C++17 based (not unreasonable in 2025 I think) although Dear ImGui still uses C++11.
 - Has no runtime dependencies other than Dear ImGui and the C++17 Standard Template Library (STL).
@@ -134,6 +134,20 @@ For a complete example, please see the [example folder](example/).
 	- Holding down the Alt key with the left or right arrow moves a whole word on MacOS.
 	- Holding down the Ctrl key with the left or right arrow moves a whole word on Linux and Windows.
 
+- Panning and scrolling:
+	- The text scrolls automatically when you move the cursor through keyboard actions.
+	- Mouse actions that extend the selections also apply auto scrolling.
+	- The text in the editor can still be scrolled using those bars that were invented in the 1970's.
+	- Devices with scroll wheels or those that simulated vertical and horizontal scroll wheels (like a touch pad, a mouse with a builtin touch pad or a pen) can also scroll the text. This is actually implemented in Dear ImGui (and used by the editor) and must be supported by your backend.
+	- The middle mouse button on a three-button mouse (or whatever is reported by your OS as a middle mouse button event) enters pan or scroll mode mode depending on the configuration. Pan mode is the default and you can switch this to Scroll mode by calling SetMiddleMouseScrollMode(). Calling SetMiddleMousePanMode() switches it back. The example application uses a menu option to toggle modes.
+	- In pan mode, the text is grabbed and dragged as the cursor moves and as long as the middle mouse button is down.
+	- When you mouse approaches the edges of the editor window, it enters continuous panning mode and the further you move away form the window, the faster it pans.
+	- Panning as described above is typical in CAD or 3D type applications.
+	- In scroll mode, you can release the middle mouse button and scroll the text just like you can in some browsers.
+	- Scroll mode is ended by any clicking any mouse button.
+	- Panning and scrolling operate in opposite directions as they are different paradigms.
+	- An optional indicator (default is on) is shown in the center of the editor window when entering pan/scroll mode. If anybody finds this annoying, it can be turned off through an API by calling SetShowPanScrollIndicatorEnabled(false).
+
 - Cursors and selections:
 	- Alt with single left mouse click creates a new cursor on MacOS.
 	- Ctrl with single left mouse click creates a new cursor on Linux and Windows.
@@ -146,6 +160,7 @@ For a complete example, please see the [example folder](example/).
 	- Dragging mouse with left mouse button selects text. Shift extends current selection.
 	- Alt-Shift-RightArrow (on MacOS) and Ctrl-Shift-RightArrow (on Linux and Windows) grows all selections to outer blocks. First just the content of the block, than including the curly brackets. Continuously hitting the key combination keeps growing the selections.
 	- Alt-Shift-LeftArrow (on MacOS) and Ctrl-Shift-LeftArrow (on Linux and Windows) shrinks all selections to inner blocks. First including the curly brackets, that just the content of the block. Continuously hitting the key combination keeps shrinking the selections.
+	- Left mouse clicking or dragging over line numbers select line(s).
 
 - Clipboard Operations:
 	- Ctrl-X or Shift-Delete cuts selected text or current line if no selection.
@@ -177,10 +192,7 @@ For a complete example, please see the [example folder](example/).
 	- Ctrl-g finds next instance of search text.
 
 - Other:
-	- Mouse wheel movements scroll/pan the document.
-	- Middle mouse button and dragging scrolls/pans the document.
 	- Insert key toggles between insert (default) and overwrite modes.
-	- Clicking or dragging over line numbers select line(s).
 
 ## Unicode and UTF-8
 
