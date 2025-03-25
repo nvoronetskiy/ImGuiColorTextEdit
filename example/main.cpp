@@ -59,7 +59,6 @@ int main(int, char**) {
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 	io.IniFilename = nullptr;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	ImGui::StyleColorsDark();
 
 	// setup platform/renderer backends

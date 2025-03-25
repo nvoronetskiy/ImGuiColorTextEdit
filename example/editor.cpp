@@ -153,7 +153,7 @@ void Editor::saveFile() {
 void Editor::render() {
 	// create the outer window
 	ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
-	ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+	ImGui::SetNextWindowSize(ImGui::GetMainViewport()->Size);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 	ImGui::Begin("MainWindow", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_MenuBar);
 
@@ -413,9 +413,10 @@ void Editor::showFileOpen() {
 	IGFD::FileDialogConfig config;
 	config.countSelectionMax = 1;
 
-	config.flags = ImGuiFileDialogFlags_Modal |
-			ImGuiFileDialogFlags_DontShowHiddenFiles |
-			ImGuiFileDialogFlags_ReadOnlyFileNameField;
+	config.flags =
+		ImGuiFileDialogFlags_Modal |
+		ImGuiFileDialogFlags_DontShowHiddenFiles |
+		ImGuiFileDialogFlags_ReadOnlyFileNameField;
 
 	ImGuiFileDialog::Instance()->OpenDialog("file-open", "Select File to Open...", ".*", config);
 	state = State::openFile;
@@ -430,9 +431,10 @@ void Editor::showSaveFileAs() {
 	IGFD::FileDialogConfig config;
 	config.countSelectionMax = 1;
 
-	config.flags = ImGuiFileDialogFlags_Modal |
-			ImGuiFileDialogFlags_DontShowHiddenFiles |
-			ImGuiFileDialogFlags_ConfirmOverwrite;
+	config.flags =
+		ImGuiFileDialogFlags_Modal |
+		ImGuiFileDialogFlags_DontShowHiddenFiles |
+		ImGuiFileDialogFlags_ConfirmOverwrite;
 
 	ImGuiFileDialog::Instance()->OpenDialog("file-saveas", "Save File as...", "*", config);
 	state = State::saveFileAs;
@@ -509,9 +511,12 @@ void Editor::renderDiff() {
 
 void Editor::renderFileOpen() {
 	// handle file open dialog
-	ImVec2 maxSize = ImGui::GetIO().DisplaySize;
-	ImVec2 minSize = ImVec2(maxSize.x * 0.5f, maxSize.y * 0.5f);
+	ImVec2 maxSize = ImGui::GetMainViewport()->Size;
+	ImVec2 minSize = maxSize * 0.5f;
 	auto dialog = ImGuiFileDialog::Instance();
+
+	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 
 	if (dialog->Display("file-open", ImGuiWindowFlags_NoCollapse, minSize, maxSize)) {
 		// open selected file (if required)
@@ -532,9 +537,12 @@ void Editor::renderFileOpen() {
 
 void Editor::renderSaveAs() {
 	// handle saveas dialog
-	ImVec2 maxSize = ImGui::GetIO().DisplaySize;
-	ImVec2 minSize = ImVec2(maxSize.x * 0.5f, maxSize.y * 0.5f);
+	ImVec2 maxSize = ImGui::GetMainViewport()->Size;
+	ImVec2 minSize = maxSize * 0.5f;
 	auto dialog = ImGuiFileDialog::Instance();
+
+	ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+	ImGui::SetNextWindowPos(center, ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 
 	if (dialog->Display("file-saveas", ImGuiWindowFlags_NoCollapse, minSize, maxSize)) {
 		// open selected file if required
