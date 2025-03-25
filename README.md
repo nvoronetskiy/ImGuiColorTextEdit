@@ -68,6 +68,7 @@ public API to externally implement these features is however included.
 - Find has options for whole word and/or case-sensitive searches.
 - Has Marker API to specify lines and/or line numbers to highlight and optional show tooltips (see [example](docs/markers.md)).
 - Has optional scrollbar minimap to render cursor/selection and marker locations.
+- Provides middle-mouse pan and scroll functions like CAD programs and browsers.
 - Has API to decorate each line (useful for debuggers and IDEs) (see [example](docs/lineDecorator.md)).
 - Provides optional and customizable line number or text right click context menus  (see [example](docs/contextMenus.md))
 - Provides auto completion for paired glyphs (\[, \{, \(, \", \') (can be turned on and off).
