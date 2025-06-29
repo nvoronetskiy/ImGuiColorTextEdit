@@ -54,6 +54,8 @@ int main(int, char**) {
 		return -1;
 	}
 
+	SDL_SetGPUSwapchainParameters(gpu_device, window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR, SDL_GPU_PRESENTMODE_MAILBOX);
+
 	// setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -112,7 +114,8 @@ int main(int, char**) {
 
 		if (swapchain_texture != nullptr && !is_minimized) {
 			// setup and start a render pass
-			Imgui_ImplSDLGPU3_PrepareDrawData(draw_data, command_buffer);
+			ImGui_ImplSDLGPU3_PrepareDrawData(draw_data, command_buffer);
+
 			SDL_GPUColorTargetInfo target_info = {};
 			target_info.texture = swapchain_texture;
 			target_info.load_op = SDL_GPU_LOADOP_CLEAR;

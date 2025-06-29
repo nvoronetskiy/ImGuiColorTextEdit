@@ -57,7 +57,7 @@ public API to externally implement these features is however included.
 
 - Works on MacOS, Linux and Windows.
 - Has look and feel similar to Visual Studio Code.
-- Works with latest Dear ImGui version (currently v1.91.9) and does not use deprecated functions.
+- Works with latest Dear ImGui version (currently v1.92.0) and does not use deprecated functions.
 - Supports UTF-8 encoding with 16/32 bit codepoints (based on Dear ImGui configuration, see below).
 - Is C++17 based (not unreasonable in 2025 I think) although Dear ImGui still uses C++11.
 - Has no runtime dependencies other than Dear ImGui and the C++17 Standard Template Library (STL).
