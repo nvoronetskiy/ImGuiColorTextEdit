@@ -441,10 +441,10 @@ void TextDiff::renderSideBySideLine(float x, float y, TextEditor::Line& line) {
 //
 
 void TextDiff::renderSideBySideTextScrollbars() {
-	auto maxColumsWidth = std::max(leftDocument.getMaxColumn(), rightDocument.getMaxColumn()) * glyphSize.x;
+	auto maxColumnsWidth = std::max(leftDocument.getMaxColumn(), rightDocument.getMaxColumn()) * glyphSize.x;
 	auto visibleColumnsWidth = rightLineNumberPos - leftTextPos;
 
-	if (maxColumsWidth > visibleColumnsWidth) {
+	if (maxColumnsWidth > visibleColumnsWidth) {
 		auto window = ImGui::GetCurrentWindow();
 		const ImRect outerRect = window->Rect();
 		auto borderSize = std::round(window->WindowBorderSize * 0.5f);
@@ -461,7 +461,7 @@ void TextDiff::renderSideBySideTextScrollbars() {
 			ImGuiAxis_X,
 			&scroll,
 			static_cast<ImS64>(visibleColumnsWidth),
-			static_cast<ImS64>(maxColumsWidth),
+			static_cast<ImS64>(maxColumnsWidth),
 			ImDrawFlags_RoundCornersAll)) { textScroll = static_cast<float>(scroll); }
 
 		if (ImGui::ScrollbarEx(
@@ -470,23 +470,23 @@ void TextDiff::renderSideBySideTextScrollbars() {
 			ImGuiAxis_X,
 			&scroll,
 			static_cast<ImS64>(visibleColumnsWidth),
-			static_cast<ImS64>(maxColumsWidth),
+			static_cast<ImS64>(maxColumnsWidth),
 			ImDrawFlags_RoundCornersAll)) { textScroll = static_cast<float>(scroll); }
 
 		if (ImGui::IsWindowHovered()) {
-			textScroll = std::clamp(textScroll - ImGui::GetIO().MouseWheelH * ImGui::GetFontSize(), 0.0f, maxColumsWidth - visibleColumnsWidth);
+			textScroll = std::clamp(textScroll - ImGui::GetIO().MouseWheelH * ImGui::GetFontSize(), 0.0f, maxColumnsWidth - visibleColumnsWidth);
 
 			if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) {
 				textScroll = std::max(textScroll - glyphSize.x, 0.0f);
 
 			} else if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
-				textScroll = std::min(textScroll + glyphSize.x, maxColumsWidth - visibleColumnsWidth);
+				textScroll = std::min(textScroll + glyphSize.x, maxColumnsWidth - visibleColumnsWidth);
 
 			} else if (ImGui::IsKeyPressed(ImGuiKey_Home)) {
 				textScroll = 0.0f;
 
 			} else if (ImGui::IsKeyPressed(ImGuiKey_End)) {
-				textScroll = maxColumsWidth - visibleColumnsWidth;
+				textScroll = maxColumnsWidth - visibleColumnsWidth;
 			}
 		}
 	}
@@ -530,7 +530,7 @@ void TextDiff::renderSideBySideMiniMap() {
 		if (window->ScrollbarY) {
 			auto drawList = ImGui::GetWindowDrawList();
 			auto rect = ImGui::GetWindowScrollbarRect(window, ImGuiAxis_Y);
-			auto lineHeight = std::max(rect.GetHeight() / static_cast<float>(lineInfo.size()), 1.0f);
+			auto lineHeight = rect.GetHeight() / static_cast<float>(document.size());
 			auto offset = (rect.Max.x - rect.Min.x) * 0.3f;
 			auto left = rect.Min.x + offset;
 			auto right = rect.Max.x - offset;

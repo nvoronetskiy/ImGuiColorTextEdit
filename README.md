@@ -57,7 +57,7 @@ public API to externally implement these features is however included.
 
 - Works on MacOS, Linux and Windows.
 - Has look and feel similar to Visual Studio Code.
-- Works with latest Dear ImGui version (currently v1.91.9) and does not use deprecated functions.
+- Works with latest Dear ImGui version (currently v1.92.0) and does not use deprecated functions.
 - Supports UTF-8 encoding with 16/32 bit codepoints (based on Dear ImGui configuration, see below).
 - Is C++17 based (not unreasonable in 2025 I think) although Dear ImGui still uses C++11.
 - Has no runtime dependencies other than Dear ImGui and the C++17 Standard Template Library (STL).
@@ -67,7 +67,7 @@ public API to externally implement these features is however included.
 - Has find/replace user interface and API with full undo/redo.
 - Find has options for whole word and/or case-sensitive searches.
 - Has Marker API to specify lines and/or line numbers to highlight and optional show tooltips (see [example](docs/markers.md)).
-- Has optional scrollbar minimap to render cursor/selection and marker locations.
+- Has optional scrollbar minimap to render cursor, selection and marker locations.
 - Provides middle-mouse pan and scroll functions like CAD programs and browsers.
 - Has API to decorate each line (useful for debuggers and IDEs) (see [example](docs/lineDecorator.md)).
 - Provides optional and customizable line number or text right click context menus  (see [example](docs/contextMenus.md))

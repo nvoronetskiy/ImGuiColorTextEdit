@@ -40,7 +40,13 @@ public:
 	//
 
 	// access editor options
-	inline void SetTabSize(int value) { document.setTabSize(std::max(1, std::min(8, value))); }
+	inline void SetTabSize(int value) {
+		// this must be called before text is loaded/edited
+		if (document.isEmpty() && transactions.empty()) {
+			document.setTabSize(std::max(1, std::min(8, value)));
+		}
+	}
+
 	inline int GetTabSize() const { return document.getTabSize(); }
 	inline void SetLineSpacing(float value) { lineSpacing = std::max(1.0f, std::min(2.0f, value)); }
 	inline float GetLineSpacing() const { return lineSpacing; }
@@ -82,7 +88,9 @@ public:
 			document.normalizeCoordinate(Coordinate(endLine, endColumn)));
 	}
 
-	inline bool IsEmpty() const { return document.size() == 1 && document[0].size() == 0; }
+	inline void ClearText() { SetText(""); }
+
+	inline bool IsEmpty() const { return document.isEmpty(); }
 	inline int GetLineCount() const { return document.lineCount(); }
 
 	// render the text editor in a Dear ImGui context
@@ -390,7 +398,7 @@ public:
 	public:
 		static std::string_view::const_iterator skipBOM(std::string_view::const_iterator i, std::string_view::const_iterator end);
 		static std::string_view::const_iterator read(std::string_view::const_iterator i, std::string_view::const_iterator end, ImWchar* codepoint);
-		static size_t write(char* i, ImWchar codepoint); // must point to buffer of 4 character (returns number of characters written)
+		static size_t write(char* i, ImWchar codepoint); // must point to buffer of 4 characters (returns number of characters written)
 		static bool isLetter(ImWchar codepoint);
 		static bool isNumber(ImWchar codepoint);
 		static bool isWord(ImWchar codepoint);
@@ -705,6 +713,9 @@ protected:
 		std::string getSectionText(Coordinate start, Coordinate end) const;
 		ImWchar getCodePoint(Coordinate location);
 
+		// see if document is empty
+		inline bool isEmpty() const { return size() == 1 && at(0).size() == 0; }
+
 		// get number of lines (as an int)
 		inline int lineCount() const { return static_cast<int>(size()); }
 
@@ -804,10 +815,10 @@ protected:
 		// add a transaction to the list, execute it and make it undoable
 		void add(std::shared_ptr<Transaction> transaction);
 
-		// undo the last transction
+		// undo the last transaction
 		void undo(Document& document, Cursors& cursors);
 
-		// redo the last undone transction;
+		// redo the last undone transaction;
 		void redo(Document& document, Cursors& cursors);
 
 		// get status information
@@ -835,7 +846,7 @@ protected:
 		// see if string matches part of line
 		bool matches(Line::iterator start, Line::iterator end, const std::string_view& text);
 
-		// set color fofr specified range of glyphs
+		// set color for specified range of glyphs
 		inline void setColor(Line::iterator start, Line::iterator end, Color color) { while (start < end) (start++)->color = color; }
 	} colorizer;
 
@@ -878,6 +889,7 @@ protected:
 
 	// access the editor's text
 	void setText(const std::string_view& text);
+	void clearText();
 
 	// render (parts of) the text editor
 	void render(const char* title, const ImVec2& size, bool border);
