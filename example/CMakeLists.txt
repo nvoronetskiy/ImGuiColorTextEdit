@@ -20,6 +20,7 @@ add_executable(example
 	../TextDiff.h
 	../dtl.h
 	editor.cpp
+	dejavu.cpp
 	main.cpp)
 
 target_link_libraries(example SDL3::SDL3 SDL3_Headers imguifd)

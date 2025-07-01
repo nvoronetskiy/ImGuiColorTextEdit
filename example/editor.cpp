@@ -158,17 +158,20 @@ void Editor::render() {
 	ImGui::Begin("MainWindow", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_MenuBar);
 
 	// add a menubar
-	renderMenubar();
+	renderMenuBar();
 
 	// render the text editor widget
 	auto area = ImGui::GetContentRegionAvail();
 	auto& style = ImGui::GetStyle();
 	auto statusBarHeight = ImGui::GetFrameHeight() + 2.0f * style.WindowPadding.y;
-	editor.Render("TextEditor", ImVec2(0.0f, area.y - style.ItemSpacing.y - statusBarHeight));
+	auto editorSize = ImVec2(0.0f, area.y - style.ItemSpacing.y - statusBarHeight);
+	ImGui::PushFont(nullptr, fontSize);
+	editor.Render("TextEditor", editorSize);
+	ImGui::PopFont();
 
 	// render a statusbar
 	ImGui::Spacing();
-	renderStatusbar();
+	renderStatusBar();
 
 	if (state ==State::diff) {
 		renderDiff();
@@ -209,10 +212,10 @@ void Editor::tryToQuit() {
 
 
 //
-//	Editor::renderMenubar
+//	Editor::renderMenuBar
 //
 
-void Editor::renderMenubar() {
+void Editor::renderMenuBar() {
 	// create menubar
 	if (ImGui::BeginMenuBar()) {
 		if (ImGui::BeginMenu("File")) {
@@ -271,6 +274,10 @@ void Editor::renderMenubar() {
 		}
 
 		if (ImGui::BeginMenu("View")) {
+			if (ImGui::MenuItem("Zoom In", " " SHORTCUT "+")) { increaseFontSIze(); }
+			if (ImGui::MenuItem("Zoom Out", " " SHORTCUT "-")) { decreaseFontSIze(); }
+			ImGui::Separator();
+
 			bool flag;
 			flag = editor.IsShowWhitespacesEnabled(); if (ImGui::MenuItem("Show Whitespaces", nullptr, &flag)) { editor.SetShowWhitespacesEnabled(flag); };
 			flag = editor.IsShowLineNumbersEnabled(); if (ImGui::MenuItem("Show Line Numbers", nullptr, &flag)) { editor.SetShowLineNumbersEnabled(flag); };
@@ -299,16 +306,18 @@ void Editor::renderMenubar() {
 			else if (ImGui::IsKeyPressed(ImGuiKey_O)) { openFile(); }
 			else if (ImGui::IsKeyPressed(ImGuiKey_S)) { if (filename == "untitled") { showSaveFileAs(); } else { saveFile(); } }
 			else if (ImGui::IsKeyPressed(ImGuiKey_I)) { showDiff(); }
+			else if (ImGui::IsKeyPressed(ImGuiKey_Equal)) { increaseFontSIze(); }
+			else if (ImGui::IsKeyPressed(ImGuiKey_Minus)) { decreaseFontSIze(); }
 		}
 	}
 }
 
 
 //
-//	Editor::renderStatusbar
+//	Editor::renderStatusBar
 //
 
-void Editor::renderStatusbar() {
+void Editor::renderStatusBar() {
 	// language support
 	static const char* languages[] = {"C", "C++", "Cs", "AngelScript", "Lua", "Python", "GLSL", "HLSL",  "JSON", "Markdown", "SQL"};
 
@@ -357,7 +366,7 @@ void Editor::renderStatusbar() {
 	int line;
 	int column;
 	int tabSize = editor.GetTabSize();
-	float glyphWidth = editor.GetGlyphWidth();
+	float glyphWidth = ImGui::CalcTextSize("#").x;
 	editor.GetCurrentCursor(line, column);
 
 	// determine status message

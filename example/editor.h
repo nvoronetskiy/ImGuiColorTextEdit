@@ -9,6 +9,7 @@
 //	Include files
 //
 
+#include <algorithm>
 #include <functional>
 #include <string>
 
@@ -40,8 +41,8 @@ public:
 
 	private:
 	// private functions
-	void renderMenubar();
-	void renderStatusbar();
+	void renderMenuBar();
+	void renderStatusBar();
 
 	void showDiff();
 	void showFileOpen();
@@ -69,6 +70,10 @@ public:
 	bool done = false;
 	std::string errorMessage;
 	std::function<void()> onConfirmClose;
+
+	float fontSize = 17.0f;
+	inline void increaseFontSIze() { fontSize = std::clamp(fontSize + 1.0f, 8.0f, 24.0f); }
+	inline void decreaseFontSIze() { fontSize = std::clamp(fontSize - 1.0f, 8.0f, 24.0f); }
 
 	// editor state
 	enum class State {

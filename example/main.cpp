@@ -19,6 +19,7 @@
 #include "imgui_impl_sdlgpu3.h"
 
 #include "editor.h"
+#include "dejavu.h"
 
 
 //
@@ -54,12 +55,10 @@ int main(int, char**) {
 		return -1;
 	}
 
-	SDL_SetGPUSwapchainParameters(gpu_device, window, SDL_GPU_SWAPCHAINCOMPOSITION_SDR, SDL_GPU_PRESENTMODE_MAILBOX);
-
 	// setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
+	auto& io = ImGui::GetIO();
 	io.IniFilename = nullptr;
 	ImGui::StyleColorsDark();
 
@@ -70,6 +69,15 @@ int main(int, char**) {
 	init_info.ColorTargetFormat = SDL_GetGPUSwapchainTextureFormat(gpu_device, window);
 	init_info.MSAASamples = SDL_GPU_SAMPLECOUNT_1;
 	ImGui_ImplSDLGPU3_Init(&init_info);
+
+	// setup our font
+	ImFontConfig config;
+	std::strncpy(config.Name, "DejaVu", sizeof(config.Name));
+	config.FontDataOwnedByAtlas = false;
+	config.OversampleH = 1;
+	config.OversampleV = 1;
+	io.Fonts->Clear();
+	io.Fonts->AddFontFromMemoryCompressedTTF((void*) &dejavu, dejavuSize, 15.0f, &config);
 
 	// main loop
 	Editor editor;
