@@ -9,8 +9,9 @@
 //	Include files
 //
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include <SDL3/SDL.h>
 
@@ -72,7 +73,7 @@ int main(int, char**) {
 
 	// setup our font
 	ImFontConfig config;
-	std::strncpy(config.Name, "DejaVu", sizeof(config.Name));
+	std::memcpy(config.Name, "DejaVu", 7);
 	config.FontDataOwnedByAtlas = false;
 	config.OversampleH = 1;
 	config.OversampleV = 1;
