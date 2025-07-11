@@ -57,8 +57,8 @@ public API to externally implement these features is however included.
 
 - Works on MacOS, Linux and Windows.
 - Has look and feel similar to Visual Studio Code.
-- Works with latest Dear ImGui version (currently v1.92.0) and does not use deprecated functions.
-- Supports dynamic font sizes (courtesy of Dear ImGui v1.92.0+). Implemented in example application.
+- Works with latest Dear ImGui version (currently v1.92.1) and does not use deprecated functions.
+- Supports dynamic font sizes (courtesy of Dear ImGui v1.92+). Implemented in example application.
 - Supports UTF-8 encoding with 16/32 bit codepoints (based on Dear ImGui configuration, see below).
 - Is C++17 based (not unreasonable in 2025 I think) although Dear ImGui still uses C++11.
 - Has no runtime dependencies other than Dear ImGui and the C++17 Standard Template Library (STL).
@@ -213,7 +213,7 @@ basically limits unicode support to the Basic Multilingual Plane (see
 
 Regardless of whether 16 or 32 bit codepoints are used, it is your responsibility
 to ensure Dear ImGui is configured with the correct font and font size. As of
-Dear ImGui v1.92.0, you can now use dynamically sized fonts and use any font glyph
+Dear ImGui v1.92, you can now use dynamically sized fonts and use any font glyph
 without setting up glyph ranges or a font atlas. All this functionality is now
 in the Dear ImGui core and the TextEditor uses it. Please see the example application
 on how to use PushFont/PopFont around the TextEditor Render function. The demo app
