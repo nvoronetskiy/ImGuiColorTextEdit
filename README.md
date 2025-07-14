@@ -57,7 +57,8 @@ public API to externally implement these features is however included.
 
 - Works on MacOS, Linux and Windows.
 - Has look and feel similar to Visual Studio Code.
-- Works with latest Dear ImGui version (currently v1.92.0) and does not use deprecated functions.
+- Works with latest Dear ImGui version (currently v1.92.1) and does not use deprecated functions.
+- Supports dynamic font sizes (courtesy of Dear ImGui v1.92+). Implemented in example application.
 - Supports UTF-8 encoding with 16/32 bit codepoints (based on Dear ImGui configuration, see below).
 - Is C++17 based (not unreasonable in 2025 I think) although Dear ImGui still uses C++11.
 - Has no runtime dependencies other than Dear ImGui and the C++17 Standard Template Library (STL).
@@ -125,7 +126,7 @@ For a complete example, please see the [example folder](example/).
 	- Shift: as you would expect on all platforms.
 	- If a keyboard has a left and right version of these modifiers, the meaning is not different.
 
-- Cursor movements:
+- Cursor Movements:
 	- Single left mouse click moves the cursor.
 	- Arrow keys move cursor left, right, up and down.
 	- PageUp and PageDown do what you expect.
@@ -135,7 +136,7 @@ For a complete example, please see the [example folder](example/).
 	- Holding down the Alt key with the left or right arrow moves a whole word on MacOS.
 	- Holding down the Ctrl key with the left or right arrow moves a whole word on Linux and Windows.
 
-- Panning and scrolling:
+- Panning and Scrolling:
 	- The text scrolls automatically when you move the cursor through keyboard actions.
 	- Mouse actions that extend the selections also apply auto scrolling.
 	- The text in the editor can still be scrolled using those bars that were invented in the 1970's.
@@ -149,7 +150,7 @@ For a complete example, please see the [example folder](example/).
 	- Panning and scrolling operate in opposite directions as they are different paradigms.
 	- An optional indicator (default is on) is shown in the center of the editor window when entering pan/scroll mode. If anybody finds this annoying, it can be turned off through an API by calling SetShowPanScrollIndicatorEnabled(false).
 
-- Cursors and selections:
+- Cursors and Selections:
 	- Alt with single left mouse click creates a new cursor on MacOS.
 	- Ctrl with single left mouse click creates a new cursor on Linux and Windows.
 	- Ctrl-A select all text.
@@ -211,11 +212,12 @@ basically limits unicode support to the Basic Multilingual Plane (see
 [this article on Wikipedia](https://en.wikipedia.org/wiki/Plane_(Unicode))).
 
 Regardless of whether 16 or 32 bit codepoints are used, it is your responsibility
-to ensure Dear ImGui is configured with the correct font and glyph/codepoint ranges
-you want to use. By default, Dear ImGui uses the ProggyClean.ttf font which
-only contains the Latin-1 character set (ISO 8859-1). To load additional fonts
-and set the desired glyphs ranges, please see the
-[Dear InGui documentation](https://github.com/ocornut/imgui/blob/master/docs/FONTS.md).
+to ensure Dear ImGui is configured with the correct font and font size. As of
+Dear ImGui v1.92, you can now use dynamically sized fonts and use any font glyph
+without setting up glyph ranges or a font atlas. All this functionality is now
+in the Dear ImGui core and the TextEditor uses it. Please see the example application
+on how to use PushFont/PopFont around the TextEditor Render function. The demo app
+also shows how to increase/decrease the font size on the fly.
 
 ## Architecture
 
