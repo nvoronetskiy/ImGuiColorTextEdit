@@ -246,9 +246,6 @@ void Editor::renderMenuBar() {
 			if (ImGui::MenuItem("Spaces To Tabs")) { editor.SpacesToTabs(); }
 			if (ImGui::MenuItem("Strip Trailing Whitespaces")) { editor.StripTrailingWhitespaces(); }
 
-			ImGui::Separator();
-			if (ImGui::MenuItem("Show Diff", " " SHORTCUT "I")) { showDiff(); }
-
 			ImGui::EndMenu();
 		}
 
@@ -285,6 +282,10 @@ void Editor::renderMenuBar() {
 			flag = editor.IsCompletingPairedGlyphs(); if (ImGui::MenuItem("Complete Matching Glyphs", nullptr, &flag)) { editor.SetCompletePairedGlyphs(flag); };
 			flag = editor.IsShowPanScrollIndicatorEnabled(); if (ImGui::MenuItem("Show Pan/Scroll Indicator", nullptr, &flag)) { editor.SetShowPanScrollIndicatorEnabled(flag); };
 			flag = editor.IsMiddleMousePanMode(); if (ImGui::MenuItem("Middle Mouse Pan Mode", nullptr, &flag)) { if (flag) editor.SetMiddleMousePanMode(); else editor.SetMiddleMouseScrollMode(); };
+
+			ImGui::Separator();
+			if (ImGui::MenuItem("Show Diff", " " SHORTCUT "I")) { showDiff(); }
+
 			ImGui::EndMenu();
 		}
 
