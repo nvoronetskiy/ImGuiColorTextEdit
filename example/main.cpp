@@ -91,9 +91,8 @@ int main(int, char**) {
 
 			if (event.type == SDL_EVENT_QUIT) {
 				editor.tryToQuit();
-			}
 
-			if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(window)) {
+			} else if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == SDL_GetWindowID(window)) {
 				editor.tryToQuit();
 			}
 		}
