@@ -42,7 +42,7 @@ You can find all text editor source code components here in the
 [ObjectTalk repository](https://github.com/goossens/ObjectTalk/tree/master/3rdparty/imguieditor).
 
 To respect its origins, this repository will remain a fork (of a fork) although
-there now is little code in common.
+there is now little code in common.
 
 ![Screenshot](docs/textEditor.png)
 
@@ -63,28 +63,28 @@ public API to externally implement these features is however included.
 - Is C++17 based (not unreasonable in 2025 I think) although Dear ImGui still uses C++11.
 - Has no runtime dependencies other than Dear ImGui and the C++17 Standard Template Library (STL).
 - Has full undo/redo capabilities and supports native clipboard with UTF-8 encoded strings.
-- Extendable syntax highlighting for multiple languages and API for custom languages.
-- Customizable color palettes (a dark and light version that work with Dear ImGui defaults are included).
+- Has extendable syntax highlighting for multiple languages and API for custom languages.
+- Has customizable color palettes (a dark and light version that work with Dear ImGui defaults are included).
 - Has find/replace user interface and API with full undo/redo.
 - Find has options for whole word and/or case-sensitive searches.
-- Has Marker API to specify lines and/or line numbers to highlight and optional show tooltips (see [example](docs/markers.md)).
+- Has marker API to specify lines and/or line numbers to highlight and optional show tooltips (see [example](docs/markers.md)).
 - Has optional scrollbar minimap to render cursor, selection and marker locations.
 - Provides middle-mouse pan and scroll functions like CAD programs and browsers.
 - Has API to decorate each line (useful for debuggers and IDEs) (see [example](docs/lineDecorator.md)).
-- Provides optional and customizable line number or text right click context menus  (see [example](docs/contextMenus.md))
+- Provides optional and customizable right click context menus for line numbers or text lines (see [example](docs/contextMenus.md))
 - Provides auto completion for paired glyphs (\[, \{, \(, \", \') (can be turned on and off).
 - If auto complete is turned on, accidentally typed closing glyphs are ignored.
 - If auto complete is turned on, selections can be surrounded by paired glyphs.
 - Supports blinking cursor (can be turned on/off using Dear ImGui's global io.ConfigInputTextCursorBlink flag).
-- Allows bracket matching and coloring (similar to Visual Studio Code) to be turned on and off.
+- Supports bracket matching and coloring similar to Visual Studio Code (can be turned on and off).
 - Supports multiple cursors and multiple selections.
-- Auto indent with simplified implementation (can be turned on and off).
-- API to filter selections (with full undo support).
+- Provides auto indent with simplified implementation (can be turned on and off).
+- Has API to filter selections (with full undo support).
 - Uppercase/lowercase filter is example of selection filtering.
-- API to filter each line in editor (with full undo support).
+- Has API to filter each line in editor (with full undo support).
 - Tabs to Space (and visa versa) are examples of line filtering.
-- API to strip trailing whitespaces.
-- Whitespace indicators for tabs and spaces (can be turned on and off).
+- Has API to strip trailing whitespaces.
+- Provides whitespace indicators for tabs and spaces (can be turned on and off).
 - No longer uses regular expressions for colorizing text (see below).
 - Provides an optional companion widget to show source code differences between versions (see below).
 
@@ -120,10 +120,10 @@ For a complete example, please see the [example folder](example/).
 ## Default Keyboard and Mouse Mappings
 
 - In the mappings listed below, the following modifier keys are used:
-	- Super: this refers to the Control key on MacOS (Dear ImGui reverses Command and Control key on that platform).
 	- Ctrl: this refers to the Command key on MacOS and the Control key on Linux and Windows.
 	- Alt: this refers to the Option key on MacOS and the Alt key on Linux and Windows.
 	- Shift: as you would expect on all platforms.
+	- Super: this refers to the Control key on MacOS (Dear ImGui reverses Command and Control key on that platform).
 	- If a keyboard has a left and right version of these modifiers, the meaning is not different.
 
 - Cursor Movements:
@@ -274,11 +274,11 @@ performant. The new colorizer is based on multiple state-transition engines
 that make it easier to express language rules and also improves performance.
 The new colorizer only effects lines that have changed but keep in mind, that
 for instance opening a multiline comment at the start of the document,
-causes the entire document to be re-colorized. Luckily the new engine is fast
+causes the entire document to be re-colored. Luckily the new engine is fast
 enough that you don't notice this and it would only affect a single frame. I
 think it is also important to point out that this widget is not really intended
 for mega/gigabyte size text files. For those, I would still use a regular text
-editors.
+editors (if you can find one that can handle that requirement).
 
 #### Bracketeer
 
@@ -344,7 +344,9 @@ are available. If you find any problems or want to make a suggestion for improve
 
 ## Credits
 
-Thank you [Omar Cornut](https://github.com/ocornut/imgui) for creating Dear ImGui
+This version of ImGuiColorTextEdit was written from scratch by [Johan A. Goossens](https://github.com/goossens).
+
+Thank you to [Omar Cornut](https://github.com/ocornut/imgui) for creating Dear ImGui
 in the first place. Without you, this editor would not exist.
 
 I owe a great deal of gratitude to [Balázs Jákó](https://github.com/BalazsJako/ImGuiColorTextEdit)
