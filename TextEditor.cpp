@@ -3332,6 +3332,13 @@ TextEditor::Coordinate TextEditor::Document::findWordStart(Coordinate from) cons
 	} else {
 		auto& line = at(from.line);
 		auto index = getIndex(from);
+		if (index >= line.size()) {
+            if (index > 0) {
+                index--;
+            } else {
+                return from;
+            }
+        }
 		auto firstCharacter = line[index].codepoint;
 
 		if (CodePoint::isWhiteSpace(firstCharacter)) {
