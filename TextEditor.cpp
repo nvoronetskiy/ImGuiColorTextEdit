@@ -992,20 +992,21 @@ void TextEditor::handleMouseInteractions() {
 			scrolling = false;
 		}
 
-	// ignore interactions when the editor is not hovered
+	// ignore other interactions when the editor is not hovered
 	} else if (ImGui::IsWindowHovered()) {
 		auto io = ImGui::GetIO();
 		auto mousePos = ImGui::GetMousePos() - ImGui::GetCursorScreenPos();
-		bool overLineNumbers = showLineNumbers && absoluteMousePos.x > lineNumberLeftOffset && absoluteMousePos.x < lineNumberRightOffset;
+		bool overLineNumbers = showLineNumbers && (absoluteMousePos.x > lineNumberLeftOffset) && (absoluteMousePos.x < lineNumberRightOffset);
 		bool overText = mousePos.x - ImGui::GetScrollX() > textOffset;
 
-		auto mouseCoord = document.normalizeCoordinate(Coordinate(
-			static_cast<int>(std::floor(mousePos.y / glyphSize.y)),
-			static_cast<int>(std::round((mousePos.x - textOffset) / glyphSize.x))));
+		Coordinate glyphCoordinate;
+		Coordinate cursorCoordinate;
 
-		auto mouseCoordAbs = document.normalizeCoordinate(Coordinate(
-			static_cast<int>(std::floor(mousePos.y / glyphSize.y)),
-			static_cast<int>(std::floor((mousePos.x - textOffset) / glyphSize.x))));
+		document.normalizeCoordinate(
+			mousePos.y / glyphSize.y,
+			(mousePos.x - textOffset) / glyphSize.x,
+			glyphCoordinate,
+			cursorCoordinate);
 
 		// show text cursor if required
 		if (ImGui::IsWindowFocused() && overText) {
@@ -1018,12 +1019,12 @@ void TextEditor::handleMouseInteractions() {
 
 			if (overLineNumbers) {
 				auto& cursor = cursors.getCurrent();
-				auto start = Coordinate(mouseCoord.line, 0);
+				auto start = Coordinate(cursorCoordinate.line, 0);
 				auto end = document.getDown(start);
 				cursor.update(cursor.getInteractiveEnd() < cursor.getInteractiveStart() ? start : end);
 
 			} else {
-				cursors.updateCurrentCursor(mouseCoord);
+				cursors.updateCurrentCursor(cursorCoordinate);
 			}
 
 			makeCursorVisible();
@@ -1041,12 +1042,12 @@ void TextEditor::handleMouseInteractions() {
 		} else if (ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
 			// handle right clicks by setting up context menu (if required)
 			if (overLineNumbers && lineNumberContextMenuCallback) {
-				contextMenuLine = mouseCoordAbs.line;
+				contextMenuLine = glyphCoordinate.line;
 				ImGui::OpenPopup("LineNumberContextMenu");
 
 			} else if (overText && textContextMenuCallback) {
-				contextMenuLine = mouseCoordAbs.line;
-				contextMenuColumn = mouseCoordAbs.column;
+				contextMenuLine = glyphCoordinate.line;
+				contextMenuColumn = glyphCoordinate.column;
 				ImGui::OpenPopup("TextContextMenu");
 			}
 
@@ -1064,7 +1065,7 @@ void TextEditor::handleMouseInteractions() {
 			if (tripleClick) {
 				// left mouse button triple click
 				if (overText) {
-					auto start = document.getStartOfLine(mouseCoord);
+					auto start = document.getStartOfLine(cursorCoordinate);
 					auto end = document.getDown(start);
 					cursors.updateCurrentCursor(start, end);
 				}
@@ -1072,12 +1073,12 @@ void TextEditor::handleMouseInteractions() {
 			} else if (doubleClick) {
 				// left mouse button double click
 				if (overText) {
-					auto codepoint = document.getCodePoint(mouseCoordAbs);
+					auto codepoint = document.getCodePoint(glyphCoordinate);
 					bool handled = false;
 
 					// select bracketed section (if required)
 					if (CodePoint::isBracketOpener(codepoint)) {
-						auto brackets = bracketeer.getEnclosingBrackets(document.getRight(mouseCoordAbs));
+						auto brackets = bracketeer.getEnclosingBrackets(document.getRight(glyphCoordinate));
 
 						if (brackets != bracketeer.end()) {
 							if (ImGui::IsKeyDown(ImGuiMod_Shift)) {
@@ -1091,7 +1092,7 @@ void TextEditor::handleMouseInteractions() {
 						}
 
 					} else if (CodePoint::isBracketCloser(codepoint)) {
-						auto brackets = bracketeer.getEnclosingBrackets(mouseCoordAbs);
+						auto brackets = bracketeer.getEnclosingBrackets(glyphCoordinate);
 
 						if (brackets != bracketeer.end()) {
 							cursors.setCursor(brackets->start, document.getRight(brackets->end));
@@ -1100,9 +1101,9 @@ void TextEditor::handleMouseInteractions() {
 					}
 
 					// select word if it wasn't a bracketed section
-					if (!handled) {
-						auto start = document.findWordStart(mouseCoordAbs);
-						auto end = document.findWordEnd(mouseCoordAbs);
+					if (!handled && !document.isEndOfLine(glyphCoordinate)) {
+						auto start = document.findWordStart(glyphCoordinate);
+						auto end = document.findWordEnd(glyphCoordinate);
 						cursors.updateCurrentCursor(start, end);
 					}
 				}
@@ -1119,7 +1120,7 @@ void TextEditor::handleMouseInteractions() {
 
 				if (overLineNumbers) {
 					// handle line number clicks
-					auto start = Coordinate(mouseCoord.line, 0);
+					auto start = Coordinate(cursorCoordinate.line, 0);
 					auto end = document.getDown(start);
 
 					if (extendCursor) {
@@ -1138,13 +1139,13 @@ void TextEditor::handleMouseInteractions() {
 				} else if (overText) {
 					// handle mouse clicks in text
 					if (extendCursor) {
-						cursors.updateCurrentCursor(mouseCoord);
+						cursors.updateCurrentCursor(cursorCoordinate);
 
 					} else if (addCursor) {
-						cursors.addCursor(mouseCoord);
+						cursors.addCursor(cursorCoordinate);
 
 					} else {
-						cursors.setCursor(mouseCoord);
+						cursors.setCursor(cursorCoordinate);
 					}
 
 					makeCursorVisible();
@@ -2898,7 +2899,7 @@ void TextEditor::Document::setText(const std::string_view& text) {
 	emplace_back();
 	updated = true;
 
-	// process input UTF-8 and generate lines of glyphs
+	// process UTF-8 and generate lines of glyphs
 	auto end = text.end();
 	auto i = CodePoint::skipBOM(text.begin(), end);
 
@@ -3147,7 +3148,7 @@ void TextEditor::Document::updateMaximumColumn(int first, int last) {
 		line->maxColumn = column;
 	}
 
-	// determine maximum line number in document
+	// determine maximum column number in document
 	maxColumn = 0;
 
 	for (auto line = begin(); line < end(); line++) {
@@ -3164,21 +3165,23 @@ size_t TextEditor::Document::getIndex(const Line& line, int column) const {
 	// convert a column reference to a glyph index for a specified line (taking tabs into account)
 	auto end = line.end();
 	size_t index = 0;
-	int c = 0;
+	auto leftCol = 0;
+	auto rightCol = 0;
 
-	for (auto glyph = line.begin(); glyph < end; glyph++) {
-		if (c == column) {
-			return index;
-
-		} else if (c > column) {
-			return index - 1;
-		}
-
-		c = (glyph->codepoint == '\t') ? ((c / tabSize) + 1) * tabSize : c + 1;
+	for (auto glyph = line.begin(); rightCol < column && glyph < end; glyph++) {
+		leftCol = rightCol;
+		rightCol = (glyph->codepoint == '\t') ? ((rightCol / tabSize) + 1) * tabSize : rightCol + 1;
 		index++;
 	}
 
-	return index;
+	if (rightCol - leftCol <= 1) {
+		return index;
+
+	} else {
+		auto leftDiff = column - leftCol;
+		auto rightDiff = rightCol - column;
+		return leftDiff <= rightDiff ? index - 1 : index;
+	}
 }
 
 
@@ -3225,16 +3228,12 @@ TextEditor::Coordinate TextEditor::Document::getLeft(Coordinate from, bool wordM
 	if (wordMode) {
 		// first move left by one glyph
 		from = getLeft(from);
-		auto& line = at(from.line);
-		auto index = getIndex(from);
 
 		// now skip all whitespaces
-		while (index > 0 && CodePoint::isWhiteSpace(line[index].codepoint)) {
-			index--;
-		}
+		from = findPreviousNonWhiteSpace(from, false);
 
 		// find the start of the current word
-		return findWordStart(Coordinate(from.line, getColumn(from.line, index)));
+		return findWordStart(from);
 
 	} else {
 		// calculate coordinate of previous glyph (could be on previous line)
@@ -3258,16 +3257,12 @@ TextEditor::Coordinate TextEditor::Document::getRight(Coordinate from, bool word
 	if (wordMode) {
 		// first move right by one glyph
 		from = getRight(from);
-		auto& line = at(from.line);
-		auto index = getIndex(from);
-		auto lineSize = line.size();
 
 		// now skip all whitespaces
-		while (index < lineSize && CodePoint::isWhiteSpace(line[index].codepoint)) {
-			index++;
-		}
+		from = findNextNonWhiteSpace(from, false);
 
 		// find the end of the current word
+		auto index = getIndex(from);
 		return findWordEnd(Coordinate(from.line, getColumn(from.line, index)));
 
 	} else {
@@ -3326,19 +3321,19 @@ TextEditor::Coordinate TextEditor::Document::getEndOfLine(Coordinate from) const
 //
 
 TextEditor::Coordinate TextEditor::Document::findWordStart(Coordinate from) const {
-	if (from.column == 0) {
+	auto& line = at(from.line);
+	auto lineSize = line.size();
+
+	if (from.column == 0 || lineSize == 0) {
 		return from;
 
 	} else {
-		auto& line = at(from.line);
 		auto index = getIndex(from);
-		if (index >= line.size()) {
-            if (index > 0) {
-                index--;
-            } else {
-                return from;
-            }
-        }
+
+		if (index == lineSize) {
+			index--;
+		}
+
 		auto firstCharacter = line[index].codepoint;
 
 		if (CodePoint::isWhiteSpace(firstCharacter)) {
@@ -3506,23 +3501,159 @@ bool TextEditor::Document::isWholeWord(Coordinate start, Coordinate end) const {
 
 
 //
+//	TextEditor::Document::findPreviousNonWhiteSpace
+//
+
+TextEditor::Coordinate TextEditor::Document::findPreviousNonWhiteSpace(Coordinate from, bool includeEndOfLine) const {
+	bool done = false;
+
+	while (!done) {
+		auto& line = at(from.line);
+		auto index = getIndex(from);
+
+		while (!done && index > 0) {
+			index--;
+
+			if (!CodePoint::isWhiteSpace(line[index].codepoint)) {
+				from.column = getColumn(line, index);
+				done = true;
+			}
+		}
+
+		if (!done) {
+			if (from.line == 0 || !includeEndOfLine) {
+				from.column = 0;
+				done = true;
+
+			} else {
+				from.line--;
+				from.column = at(from.line).maxColumn;
+			}
+		}
+	}
+
+	return from;
+}
+
+
+//
+//	TextEditor::Document::findNextNonWhiteSpace
+//
+
+TextEditor::Coordinate TextEditor::Document::findNextNonWhiteSpace(Coordinate from, bool includeEndOfLine) const {
+	bool done = false;
+
+	while (!done) {
+		auto& line = at(from.line);
+		auto index = getIndex(from);
+
+		while (!done && index < line.size()) {
+			if (CodePoint::isWhiteSpace(line[index].codepoint)) {
+				index++;
+
+			} else {
+				from.column = getColumn(line, index);
+				done = true;
+			}
+		}
+
+		if (!done) {
+			if (from.line == lineCount() || !includeEndOfLine) {
+				from.column = line.maxColumn;
+				done = true;
+
+			} else {
+				from.line++;
+				from.column = 0;
+			}
+		}
+	}
+
+	return from;
+}
+
+
+//
 //	TextEditor::Document::normalizeCoordinate
 //
 
 TextEditor::Coordinate TextEditor::Document::normalizeCoordinate(Coordinate coordinate) const {
-	Coordinate result;
-
 	if (coordinate.line < 0) {
-		result = Coordinate(0, 0);
+		return Coordinate(0, 0);
 
 	} else if (coordinate.line >= lineCount()) {
-		result = Coordinate(lineCount() - 1, at(lineCount() - 1).maxColumn);
+		return Coordinate(lineCount() - 1, at(size() - 1).maxColumn);
+
+	} else if (coordinate.column < 0) {
+		return Coordinate(coordinate.line, 0);
+
+	} else if (coordinate.column > at(coordinate.line).maxColumn) {
+		return Coordinate(coordinate.line, at(coordinate.line).maxColumn);
 
 	} else {
-		result = Coordinate(coordinate.line, std::max(0, std::min(coordinate.column, at(coordinate.line).maxColumn)));
-	}
+		// determine column numbers left and right of provided coordinate
+		auto& line = at(coordinate.line);
+		auto end = line.end();
+		auto leftCol = 0;
+		auto rightCol = 0;
 
-	return Coordinate(result.line, getColumn(result.line, getIndex(result)));
+		for (auto glyph = line.begin(); rightCol < coordinate.column && glyph < end; glyph++) {
+			leftCol = rightCol;
+			rightCol = (glyph->codepoint == '\t') ? ((rightCol / tabSize) + 1) * tabSize : rightCol + 1;
+		}
+
+		auto leftDiff = coordinate.column - leftCol;
+		auto rightDiff = rightCol - coordinate.column;
+		return Coordinate(coordinate.line, leftDiff <= rightDiff ? leftCol : rightCol);
+	}
+}
+
+
+//
+//	TextEditor::Document::normalizeCoordinate
+//
+
+void TextEditor::Document::normalizeCoordinate(float line, float column, Coordinate& glyphCoordinate, Coordinate& cursorCoordinate) const {
+	// normalize coordinates by clamping them to the document and line range
+	// the returned glyphCoordinate addresses the glyph pointed to by the line and column parameters
+	// the returned cursorCoordinate returns the closest cursor position (which can be at the start or the end of the glyph)
+	if (line < 0.0f) {
+		glyphCoordinate = Coordinate(0, 0);
+		cursorCoordinate = glyphCoordinate;
+
+	} else if (line >= static_cast<float>(lineCount())) {
+		glyphCoordinate = Coordinate(lineCount() - 1, at(lineCount() - 1).maxColumn);;
+		cursorCoordinate = glyphCoordinate;
+
+	} else {
+		auto lineNo = static_cast<int>(line);
+
+		if (column < 0.0f) {
+			glyphCoordinate = Coordinate(lineNo, 0);
+			cursorCoordinate = glyphCoordinate;
+
+		} else if (column >= static_cast<float>(at(lineNo).maxColumn)) {
+			glyphCoordinate = Coordinate(lineNo, at(lineNo).maxColumn);
+			cursorCoordinate = glyphCoordinate;
+
+		} else {
+			// determine column numbers left and right of provided coordinate
+			auto leftCol = 0;
+			auto rightCol = 0;
+			auto end = at(lineNo).end();
+
+			for (auto glyph = at(lineNo).begin(); rightCol < column && glyph < end; glyph++) {
+				leftCol = rightCol;
+				rightCol = (glyph->codepoint == '\t') ? ((rightCol / tabSize) + 1) * tabSize : rightCol + 1;
+			}
+
+			auto leftDiff = column - static_cast<float>(leftCol);
+			auto rightDiff = static_cast<float>(rightCol) - column;
+
+			glyphCoordinate = Coordinate(lineNo, leftCol);
+			cursorCoordinate = Coordinate(lineNo, leftDiff <= rightDiff ? leftCol : rightCol);
+		}
+	}
 }
 
 
