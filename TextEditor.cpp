@@ -1,5 +1,5 @@
 //	TextEditor - A syntax highlighting text editor for Dear ImGui.
-//	Copyright (c) 2024-2025 Johan A. Goossens. All rights reserved.
+//	Copyright (c) 2024-2026 Johan A. Goossens. All rights reserved.
 //
 //	This work is licensed under the terms of the MIT license.
 //	For a copy, see <https://opensource.org/licenses/MIT>.
@@ -5367,7 +5367,7 @@ static TextEditor::Iterator getCStyleNumber(TextEditor::Iterator start, TextEdit
 	TextEditor::Iterator i = start;
 	TextEditor::Iterator marker;
 
-	
+
 {
 	ImWchar yych;
 	unsigned int yyaccept = 0;
@@ -6374,7 +6374,7 @@ static TextEditor::Iterator getCsStyleNumber(TextEditor::Iterator start, TextEdi
 	TextEditor::Iterator i = start;
 	TextEditor::Iterator marker;
 
-	
+
 {
 	ImWchar yych;
 	unsigned int yyaccept = 0;
@@ -6985,7 +6985,7 @@ static TextEditor::Iterator getLuaStyleNumber(TextEditor::Iterator start, TextEd
 	TextEditor::Iterator i = start;
 	TextEditor::Iterator marker;
 
-	
+
 {
 	ImWchar yych;
 	yych = i < end ? *i : 0;
@@ -7301,7 +7301,7 @@ static TextEditor::Iterator getPythonStyleNumber(TextEditor::Iterator start, Tex
 	TextEditor::Iterator i = start;
 	TextEditor::Iterator marker;
 
-	
+
 {
 	ImWchar yych;
 	yych = i < end ? *i : 0;
@@ -7718,7 +7718,7 @@ static TextEditor::Iterator tokenizeJson(TextEditor::Iterator start, TextEditor:
 	TextEditor::Iterator i = start;
 	TextEditor::Iterator marker;
 
-	
+
 {
 	ImWchar yych;
 	unsigned int yyaccept = 0;
@@ -8018,7 +8018,7 @@ static TextEditor::Iterator tokenizeMarkdown(TextEditor::Iterator start, TextEdi
 	TextEditor::Iterator i = start;
 	TextEditor::Iterator marker;
 
-	
+
 {
 	ImWchar yych;
 	yych = i < end ? *i : 0;

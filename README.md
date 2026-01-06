@@ -8,7 +8,7 @@
 ![Repo activity](https://img.shields.io/github/commit-activity/m/goossens/ImGuiColorTextEdit?label=Commits&style=for-the-badge)
 <br/>
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-![Maintained](https://img.shields.io/maintenance/yes/2025?style=for-the-badge)
+![Maintained](https://img.shields.io/maintenance/yes/2026?style=for-the-badge)
 ![Version](https://img.shields.io/badge/version-0.9-blue?style=for-the-badge)
 
 # Colorizing Text Editor and Text Diff for Dear ImGui
