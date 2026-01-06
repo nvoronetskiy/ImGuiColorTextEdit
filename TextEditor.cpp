@@ -7121,7 +7121,7 @@ static TextEditor::Iterator getLuaStyleNumber(TextEditor::Iterator start, TextEd
 	ImWchar yych;
 	yych = i < end ? *i : 0;
 	switch (yych) {
-		case '.': goto yy2;
+		case '.': goto yy3;
 		case '0': goto yy5;
 		case '1':
 		case '2':
@@ -7133,18 +7133,19 @@ static TextEditor::Iterator getLuaStyleNumber(TextEditor::Iterator start, TextEd
 		case '8':
 		case '9': goto yy6;
 		case 'E':
-		case 'e': goto yy7;
+		case 'e': goto yy8;
 		default:
-			if (i >= end) goto yy17;
-			goto yy1;
+			if (i >= end) goto yy1;
+			goto yy2;
 	}
 yy1:
-	++i;
-	{ return start; }
+	{ return i; }
 yy2:
 	++i;
-	yych = i < end ? *i : 0;
+	{ return start; }
 yy3:
+	++i;
+	yych = i < end ? *i : 0;
 	switch (yych) {
 		case '0':
 		case '1':
@@ -7155,41 +7156,29 @@ yy3:
 		case '6':
 		case '7':
 		case '8':
-		case '9': goto yy2;
+		case '9': goto yy3;
 		case 'E':
-		case 'e': goto yy7;
+		case 'e': goto yy8;
 		default: goto yy4;
 	}
 yy4:
-	{
-			return i;
-		}
+	{ return i; }
 yy5:
 	++i;
 	marker = i;
 	yych = i < end ? *i : 0;
 	switch (yych) {
-		case 0x00: goto yy4;
-		case '.': goto yy2;
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9': goto yy6;
+		case 0x00: goto yy1;
 		case 'X':
-		case 'x': goto yy8;
-		default: goto yy3;
+		case 'x': goto yy9;
+		default: goto yy7;
 	}
 yy6:
 	++i;
 	yych = i < end ? *i : 0;
+yy7:
 	switch (yych) {
-		case '.': goto yy2;
+		case '.': goto yy3;
 		case '0':
 		case '1':
 		case '2':
@@ -7201,98 +7190,19 @@ yy6:
 		case '8':
 		case '9': goto yy6;
 		case 'E':
-		case 'e': goto yy7;
-		default: goto yy4;
-	}
-yy7:
-	++i;
-	yych = i < end ? *i : 0;
-	switch (yych) {
-		case 0x00: goto yy4;
-		case '+':
-		case '-': goto yy10;
-		default: goto yy11;
+		case 'e': goto yy8;
+		default: goto yy1;
 	}
 yy8:
 	++i;
 	yych = i < end ? *i : 0;
 	switch (yych) {
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-		case 'A':
-		case 'B':
-		case 'C':
-		case 'D':
-		case 'E':
-		case 'F':
-		case 'a':
-		case 'b':
-		case 'c':
-		case 'd':
-		case 'e':
-		case 'f': goto yy12;
-		default: goto yy9;
+		case 0x00: goto yy4;
+		case '+':
+		case '-': goto yy11;
+		default: goto yy12;
 	}
 yy9:
-	i = marker;
-	goto yy4;
-yy10:
-	++i;
-	yych = i < end ? *i : 0;
-yy11:
-	switch (yych) {
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9': goto yy10;
-		default: goto yy4;
-	}
-yy12:
-	++i;
-	yych = i < end ? *i : 0;
-	switch (yych) {
-		case '.': goto yy13;
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-		case 'A':
-		case 'B':
-		case 'C':
-		case 'D':
-		case 'E':
-		case 'F':
-		case 'a':
-		case 'b':
-		case 'c':
-		case 'd':
-		case 'e':
-		case 'f': goto yy12;
-		case 'P':
-		case 'p': goto yy14;
-		default: goto yy4;
-	}
-yy13:
 	++i;
 	yych = i < end ? *i : 0;
 	switch (yych) {
@@ -7318,23 +7228,64 @@ yy13:
 		case 'd':
 		case 'e':
 		case 'f': goto yy13;
-		case 'P':
-		case 'p': goto yy14;
+		default: goto yy10;
+	}
+yy10:
+	i = marker;
+	goto yy1;
+yy11:
+	++i;
+	yych = i < end ? *i : 0;
+yy12:
+	switch (yych) {
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9': goto yy11;
 		default: goto yy4;
 	}
-yy14:
+yy13:
 	++i;
 	yych = i < end ? *i : 0;
 	switch (yych) {
-		case 0x00: goto yy4;
-		case '+':
-		case '-': goto yy15;
-		default: goto yy16;
+		case '.': goto yy15;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f': goto yy13;
+		case 'P':
+		case 'p': goto yy16;
+		default: goto yy14;
 	}
+yy14:
+	{ return i; }
 yy15:
 	++i;
 	yych = i < end ? *i : 0;
-yy16:
 	switch (yych) {
 		case '0':
 		case '1':
@@ -7358,17 +7309,55 @@ yy16:
 		case 'd':
 		case 'e':
 		case 'f': goto yy15;
-		default: goto yy4;
+		case 'P':
+		case 'p': goto yy16;
+		default: goto yy14;
+	}
+yy16:
+	++i;
+	yych = i < end ? *i : 0;
+	switch (yych) {
+		case 0x00: goto yy14;
+		case '+':
+		case '-': goto yy17;
+		default: goto yy18;
 	}
 yy17:
-	{ return start; }
+	++i;
+	yych = i < end ? *i : 0;
+yy18:
+	switch (yych) {
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f': goto yy17;
+		default: goto yy14;
+	}
 }
 
 }
 
 
 //
-//	isLuaStylePuctuation
+//	isLuaStylePunctuation
 //	[]{}!%#^&*()-+=~|<>?:/;,.
 //
 
@@ -7470,8 +7459,8 @@ yy2:
 	}
 yy3:
 	{
-			return i;
-		}
+		return i;
+	}
 yy4:
 	++i;
 	marker = i;
@@ -7886,9 +7875,9 @@ yy2:
 yy3:
 	++i;
 	{
-			color = TextEditor::Color::punctuation;
-			return i;
-		}
+		color = TextEditor::Color::punctuation;
+		return i;
+	}
 yy4:
 	++i;
 	yych = i < end ? *i : 0;
@@ -7918,9 +7907,9 @@ yy5:
 	}
 yy6:
 	{
-			color = TextEditor::Color::number;
-			return i;
-		}
+		color = TextEditor::Color::number;
+		return i;
+	}
 yy7:
 	yyaccept = 0;
 	++i;
@@ -8104,9 +8093,9 @@ yy22:
 yy23:
 	++i;
 	{
-			color = TextEditor::Color::identifier;
-			return i;
-		}
+		color = TextEditor::Color::identifier;
+		return i;
+	}
 yy24:
 	{ return start; }
 }
@@ -8202,9 +8191,9 @@ yy4:
 	}
 yy5:
 	{
-			color = TextEditor::Color::declaration;
-			return i;
-		}
+		color = TextEditor::Color::declaration;
+		return i;
+	}
 yy6:
 	++i;
 	marker = i;
@@ -8232,9 +8221,9 @@ yy8:
 	}
 yy9:
 	{
-			color = TextEditor::Color::punctuation;
-			return i;
-		}
+		color = TextEditor::Color::punctuation;
+		return i;
+	}
 yy10:
 	++i;
 	marker = i;
@@ -8476,9 +8465,9 @@ yy26:
 yy27:
 	++i;
 	{
-			color = TextEditor::Color::string;
-			return i;
-		}
+		color = TextEditor::Color::string;
+		return i;
+	}
 yy28:
 	++i;
 	yych = i < end ? *i : 0;
@@ -8491,9 +8480,9 @@ yy28:
 yy29:
 	++i;
 	{
-			color = TextEditor::Color::number;
-			return i;
-		}
+		color = TextEditor::Color::number;
+		return i;
+	}
 yy30:
 	++i;
 	yych = i < end ? *i : 0;
@@ -8506,9 +8495,9 @@ yy30:
 yy31:
 	++i;
 	{
-			color = TextEditor::Color::keyword;
-			return i;
-		}
+		color = TextEditor::Color::keyword;
+		return i;
+	}
 yy32:
 	++i;
 	yych = i < end ? *i : 0;
@@ -8537,9 +8526,9 @@ yy34:
 yy35:
 	++i;
 	{
-			color = TextEditor::Color::identifier;
-			return i;
-		}
+		color = TextEditor::Color::identifier;
+		return i;
+	}
 yy36:
 	++i;
 	yych = i < end ? *i : 0;
